@@ -1,0 +1,57 @@
+#  File:       processing.mac
+#
+#  Date:       2014-04-11
+#  Contact:    Ashley Back <ab571@sussex.ac.uk>
+#  Revisions:  2014-04-11    New File
+#              2014-05-13 <ab571@sussex.ac.uk> changed producer to read default
+#              2014-07-10 <ab571@sussex.ac.uk> Added dqtimeproc
+#              2014-11-28 <a.r.back@qmul.ac.uk> Modified for FTB analysis
+#              2014-12-01 <m.mottram@qmul.ac.uk> Added reconstruction for FTB,
+#                                                geo updates (rename accordingly)
+#              2015-07-08 <M.mottram@qmul.ac.uk> Added CSS processor
+#              2016-11-08 <rknapik@norwich.edu> Added in 2nd pass for TPMuonFollowerCut for data cleaning
+#              2016-11-22 <rknapik@norwich.edu> Added in outntuple
+#              2016-11-21 <nfbarros@hep.upenn.edu> Changed the logic of InZDAB
+#
+#       Processing on raw zdabs
+#
+#  Prerequesites: None
+#
+/rat/physics_list/OmitAll true
+
+/rat/inzdab/load_default
+
+/rat/db/set DETECTOR geo_file "geo/snoplus_water.geo"
+
+/run/initialize
+##########EVENT LOOP############
+/rat/proc calibratePMT
+/rat/proc datacleaning
+/rat/procset mask "default"
+/rat/procset add "tpmuonfollowercut"
+/rat/procset pass 2
+/rat/proc hitcleaning
+/rat/procset mask "default"
+/rat/proc dqrunproc
+/rat/proc dqpmtproc
+/rat/proc dqtimeproc
+/rat/proc dqtriggerproc
+/rat/proc chanSWStatusCalib
+
+# Conditional logic for reconstruction (exclude specific trigger types)
+/rat/proc/if trigTypeSelector
+    /rat/procset trigType "PulseGT"
+    /rat/procset trigType "EXTASY"
+    /rat/procset trigType "Pedestal"
+/rat/proc/else
+    /rat/proc partialWaterFitter
+/rat/proc/endif
+
+/rat/proc outntuple  # a file paramter needs to be passed here
+
+/rat/proclast outroot
+
+##########EVENT LOOP############
+/rat/inzdab/read
+
+exit

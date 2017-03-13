@@ -1,0 +1,55 @@
+# File: dca_flag.mac
+# Brief: Macro showing how to use flagged event analysis features of DCAProc
+#
+# Date: 2015-07-13
+# Contact: Kevin Nuckolls, <knuckolls@berkeley.edu>
+#
+# This macro demonstrates how to call and set the flagged event analysis
+# features of the Data Cleaning Analysis (DCA) Processor. It simulates 
+# electrons at the center of the detector at 2.5MeV. It then flags these
+# events acccording to the default data cleaning mask and analyzes the 
+# nhit distribution of like-cut events and the time difference between
+# like-cut events. It then writes out a series of histograms displaying
+# these qualities to a file called "dca_flag_hist.root".
+
+
+# Don't care about hadrons or muons so quicker not to initialise these processes
+/rat/physics_list/OmitMuonicProcesses true
+/rat/physics_list/OmitHadronicProcesses true
+
+# Select the snoplus geometry file
+/rat/db/set DETECTOR geo_file "geo/snoplus.geo"
+
+/run/initialize
+
+# BEGIN EVENT LOOP
+/rat/proc frontend
+/rat/proc trigger
+/rat/proc eventbuilder
+/rat/proc calibratePMT
+/rat/proc count
+/rat/procset update 10
+
+/rat/proc datacleaning
+/rat/procset mask "default"
+/rat/procset verbose 1
+
+/rat/proc dcaProc
+#/rat/procset bitmask 0x18 # Would set "flagged","timediff"
+/rat/procset type "flagged" # bitmask = 0x8
+/rat/procset type "timediff" # bitmask = 0x10
+/rat/procset file "dca_flag_hist.root"
+
+/rat/proclast outroot
+/rat/procset file "snoplus_electrons_test.root"
+# END EVENTLOOP
+
+/generator/add combo gun:fill:poisson
+/generator/vtx/set e- 0 0 0 2.5
+/generator/pos/set 0.0 0.0 0.0
+/generator/rate/set 1
+
+# generate 100 events
+/rat/run/start 100
+
+exit

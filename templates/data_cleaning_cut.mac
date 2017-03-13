@@ -1,0 +1,48 @@
+# File: data_cleaning_cut.mac
+# Brief: Macro showing how to cut on data cleaning bits.
+#
+# Date: 2014-10-24
+# Contact: P G Jones, <p.g.jones@qmul.ac.uk>
+# Revisions: 2015-01-02 Matt Strait: fixed spelling.
+#
+# This macro demonstrates how to cut on data cleaning bit values.
+# It writes out events that have set ringoffire bits only and events that
+# pass the DATACLEANING[bitmask] default mask.
+
+/rat/db/set DETECTOR geo_file "geo/snoplus_water.geo"
+
+/run/initialize
+
+# BEGIN EVENT LOOP
+/rat/proc frontend
+/rat/proc trigger
+/rat/proc eventbuilder
+/rat/proc calibratePMT
+
+/rat/proc datacleaning
+/rat/procset mask "default"
+
+/rat/proc/if dataCleaningCut
+/rat/procset flag "ringoffire"
+#/rat/procset pass 2 #Optional command to cut only on pass 2 flags
+    /rat/proc outroot
+    /rat/procset file "ringoffire.root"
+/rat/proc/endif
+
+/rat/proc/if dataCleaningCut
+/rat/procset mask "default"
+    /rat/proc outroot
+    /rat/procset file "default.root"
+/rat/proc/endif
+
+# END EVENT LOOP
+
+# Generate something to save, 5.5MeV electrons
+/generator/add combo gun:point
+/generator/vtx/set e- 0 0 0 5.5
+/generator/pos/set 0 0 0
+/generator/rate/set 1
+
+/rat/run/start 10
+
+exit

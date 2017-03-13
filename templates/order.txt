@@ -1,0 +1,7 @@
+#first_pass_data_cleaning.mac
+#processing.mac
+#data_cleaning_cut.mac
+
+#To check if applying the flags worked properly (check each .root
+#From data_cleaning_cut separately)
+#dca_flag.mac

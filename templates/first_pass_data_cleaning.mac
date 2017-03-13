@@ -1,0 +1,29 @@
+#  File:       first_pass_data_cleaning.mac
+#
+#  Date:       2016-11-08
+#  Contact:    rob knapik <rknapik@norwich.edu>
+#  Revisions:  2016-11-08    New File
+#
+#       Processing on raw zdabs, this is the first pass
+#       needed for two pass data cleaning processors.  
+#       List of cuts that need two passes:
+#           1. TPMuonFollowerCUT
+#              1st pass creates a local .json file to
+#              be read in during the second pass
+#
+#  Prerequesites: None
+#
+/rat/physics_list/OmitAll true
+
+/rat/inzdab/load_default
+
+/rat/db/set DETECTOR geo_file "geo/snoplus_water.geo"
+
+/run/initialize
+##########EVENT LOOP############
+/rat/proc datacleaning
+/rat/procset add "tpmuonfollowercut"
+/rat/procset pass 1
+##########EVENT LOOP############
+/rat/inzdab/read
+exit
