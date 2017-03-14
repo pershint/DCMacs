@@ -66,9 +66,10 @@ def getzdabnames():
         print("No file specified.  Getting all zdabs from the zdabpath and" + \
                 "trying to process them as requested.")
         zdabpaths = glob.glob(zdabpath + '/*.zdab')
+        print(zdabpaths)
         zdablist = []
         for zdab in zdabpaths:
-            zdablist.append(zdab.lstrip(zdabpath + "/"))
+            zdablist.append(zdab.replace(zdabpath + "/",""))
         if DEBUG:
             print("LIST OF ZDABS CHOSEN TO PROCESS: \n")
             print(zdablist)

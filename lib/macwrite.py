@@ -39,10 +39,10 @@ class FPMacro(Macro):
         
     def write_main(self):
         #TODO: Load in particular zdab?
-        self.mac.write('/rat/inzdab/load_default "{}"\n'.format(self.zdab))
+        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdab))
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
-        self.mac.write("/run/initialize/\n\n")
+        self.mac.write("/run/initialize\n\n")
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc datacleaning\n")
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
@@ -62,10 +62,10 @@ class ProcMacro(Macro):
         
     def write_main(self):
         #TODO: Load in particular zdab?
-        self.mac.write('/rat/inzdab/load_default "{}"\n'.format(self.zdab))
+        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdab))
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
-        self.mac.write("/run/initialize/\n\n")
+        self.mac.write("/run/initialize\n\n")
 
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc calibratePMT\n")
@@ -91,8 +91,10 @@ class ProcMacro(Macro):
         self.mac.write('    /rat/proc partialWaterFitter\n')
         self.mac.write('/rat/proc/endif\n\n')
 
-        self.mac.write('/rat/proc outntuple "{}"\n'.format(self.nt))
-        self.mac.write('/rat/proclast outroot "{}"\n'.format(self.root))
+        self.mac.write('/rat/proc outntuple\n')
+        self.mac.write('/rat/procset file "{}"\n'.format(self.nt))
+        self.mac.write('/rat/proclast outroot\n')
+        self.mac.write('/rat/procset file "{}"\n'.format(self.root))
         self.mac.write("### END EVENT LOOP ###\n\n")
 
         self.mac.write("/rat/inzdab/read\n")
@@ -115,7 +117,7 @@ class DCMacro(Macro):
         #FIXME: Load in the processed root here?
         self.mac.write('/rat/inroot/load "{}"\n'.format(self.procroot))
         self.mac.write('\n')
-        self.mac.write("/run/initialize/\n\n")
+        self.mac.write("/run/initialize\n\n")
 
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc frontend\n")
@@ -156,7 +158,7 @@ class DCAProcMacro(Macro):
         #FIXME: Load in the processed root here?
         self.mac.write('/rat/inroot/load "{}"\n'.format(self.procroot))
         self.mac.write('\n')
-        self.mac.write("/run/initialize/\n\n")
+        self.mac.write("/run/initialize\n\n")
 
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc count\n")
