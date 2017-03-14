@@ -88,7 +88,16 @@ class ProcMacro(Macro):
         self.mac.write('    /rat/procset trigType "EXTASY"\n')
         self.mac.write('    /rat/procset trigType "Pedestal"\n')
         self.mac.write("/rat/proc/else\n")
-        self.mac.write('    /rat/proc partialWaterFitter\n')
+        if self.material == "water":
+            self.mac.write('    /rat/proc waterFitter\n')
+        elif self.material == "partial":
+            self.mac.write('    /rat/proc partialWaterFitter\n')
+        elif self.material == "scintillator":
+            self.mac.write('    /rat/proc scintFitter\n')
+        else:
+            print("Invalid material selected (OR TeDiol not implemented here.)" + \
+                    "Try again with your material selection in ./config.")
+            sys.exit(0)
         self.mac.write('/rat/proc/endif\n\n')
 
         self.mac.write('/rat/proc outntuple\n')
