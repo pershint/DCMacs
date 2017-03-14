@@ -131,16 +131,11 @@ class DCMacro(Macro):
     def write_main(self):
         #TODO: Load in particular zdab?
         #FIXME: Load in the processed root here?
-        self.mac.write('/rat/inroot/load "{}"\n'.format(self.procroot))
+        self.mac.write('/rat/inroot/load {}\n'.format(self.procroot))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
 
         self.mac.write("### EVENT LOOP ###\n")
-        self.mac.write("/rat/proc frontend\n")
-        self.mac.write("/rat/proc trigger\n")
-        self.mac.write("/rat/proc eventbuilder\n")
-        self.mac.write("/rat/proc calibratePMT\n\n")
-
         self.mac.write("/rat/proc datacleaning\n")
         self.mac.write('/rat/procset mask "default"\n\n')
         for mask in self.masks:
@@ -172,7 +167,7 @@ class DCAProcMacro(Macro):
     def write_main(self):
         #TODO: Load in particular zdab?
         #FIXME: Load in the processed root here?
-        self.mac.write('/rat/inroot/load "{}"\n'.format(self.procroot))
+        self.mac.write('/rat/inroot/load {}\n'.format(self.procroot))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
 
@@ -183,7 +178,8 @@ class DCAProcMacro(Macro):
         self.mac.write("/rat/proc dcaProc\n")
         for onetype in self.types:
             self.mac.write('/rat/procset type "{}"\n'.format(onetype))
-        self.mac.write('/rac/procset file "{}_dcaProc.root"\n'.format( \
+        self.mac.write('/rat/proc outroot\n')
+        self.mac.write('/rat/procset file "{}_dcaProc.root"\n'.format( \
                 self.procroot.rstrip(".root")))
 
         self.mac.write("### END EVENT LOOP ###\n\n")

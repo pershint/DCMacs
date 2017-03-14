@@ -109,7 +109,7 @@ def CleanRoot(rootfile):
         dcscript.save()
         #Run the script written using bash
         try:
-            script.run()
+            dcscript.run()
         except:
             print("something went wrong running your script.  noooooo")
             raise
@@ -117,8 +117,8 @@ def CleanRoot(rootfile):
 
         #if not in debug mode, do cleanup
         if not DEBUG:
-            script.delete()
-            del script
+            dcscript.delete()
+            del dcscript
             datacleaning.delete()
             del datacleaning
             dcaproc.delete()

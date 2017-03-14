@@ -15,6 +15,16 @@ mask used in the Data Cleaning step can be adjusted here.  The types of outputs
 contained in the .root from running the dcaProc are adjusted using the "types"
 mask. 
 
+"masks" array in config.py usage:
+For each mask, a "clean" and a "dirty" version of the processed root will be output.
+Events in the clean output are not flagged with the input.  The dirty output 
+have one or more or these flags. You can also put "default" as one of the masks; 
+the clean output will have none of the flags in the default mask, the dirty events
+ have one or more flag.  Lastly, you can also put an integer into the mask that
+corresponds with a particular bitmask ("muontag", "ringoffire", and "qvtcut" would
+be integer ).
+
+
 When not in debug mode, macros that run the processing through RAT and the main
 batch script are deleted after use.  In debug mode, the batch script will stay in
 the ./batchscripts diretory and macros will stay in ./outmacs after running.
