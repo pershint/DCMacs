@@ -1,8 +1,17 @@
 log/ratlogs/*
+!log/ratlogs/.gitkeep
 log/ccs/*
+!log/ratlogs/.gitkeep
 log/DQRecords/*
+!log/DQRecords/.gitkeep
 log/json/*
+!log/json/.gitkeep
 data/zdabs/*
+!data/.gitkeep
+!data/zdabs/.gitkeep
+!data/proc_roots/.gitkeep
 data/proc_roots/*
 batchscripts/*
+!batchscripts/.gitkeep
 outmacs/*
+!outmacs/.gitkeep

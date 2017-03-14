@@ -1,7 +1,7 @@
 #Scripts written by: Teal Pershing
 #March 13th, 2017
 
-To run: $python main.py
+Usage help: $python main.py --help
 
 These python scripts take raw zdabs from SNO+, process the data as done on the
 SNO+ grid, and then split events based on the data cleaning mask chosen in 
