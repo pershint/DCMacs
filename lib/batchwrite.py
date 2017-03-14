@@ -1,14 +1,15 @@
-#Classes write out a batchfile that will run the macros from macwrite.py
+#classes write out a batchfile that will run the macros from macwrite.py
 #On a single zdab file.
 
 import os
 import os.path
+import macwrite as m
 from subprocess import call
 
 basepath = os.path.dirname(__file__)
 batchpath = os.path.abspath(os.path.join(basepath, "..", "batchscripts"))
-macropath = os.path.abspath(os.path.join(basepath, "..", "outmacs"))
 ratpath = os.path.abspath(os.path.join(basepath, "..","..",".."))
+macropath = m.macropath
 
 class BatchScript(object):
     def __init__(self,name,macro_list):

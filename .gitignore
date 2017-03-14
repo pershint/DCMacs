@@ -1,2 +1,3 @@
 log/
-zdabs/
+data/zdabs/*
+data/proc_roots/*

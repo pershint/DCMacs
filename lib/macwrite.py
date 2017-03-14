@@ -2,16 +2,19 @@
 #For RAT.  The macros are specifically focused on the SNO+ geometry.
 import os
 import os.path
+import glob
+from subprocess import call
 
 basepath = os.path.dirname(__file__)
-outpath = os.path.abspath(os.path.join(basepath, "..","outmacs"))
-zdpath = os.path.abspath(os.path.join(basepath, "..","zdabs"))
+macropath = os.path.abspath(os.path.join(basepath, "..","outmacs"))
+zdpath = os.path.abspath(os.path.join(basepath, "..","data","zdabs"))
+prpath = os.path.abspath(os.path.join(basepath, "..","data","proc_roots"))
 
 #Base class for all macros.  Writes to ignore Muonic/Hadronic processes
 class Macro(object):
     def __init__(self,filename,material):
         self.filename = filename
-        self.macloc = outpath + "/" + self.filename
+        self.macloc = macropath + "/" + self.filename
         self.mac = open(self.macloc,"w")
         self.material = material
         self.write_init()
@@ -21,6 +24,7 @@ class Macro(object):
         self.mac.write("/rat/physics_list/OmitMuonicProcesses true\n")
         self.mac.write("/rat/physics_list/OmitHadronicProcesses true\n")
         self.mac.write("\n")
+
 
     def save(self):
         self.mac.close()
@@ -110,14 +114,17 @@ class ProcMacro(Macro):
         self.mac.write("exit")
 
     def get_procrootname(self):
-        return self.root #Class takes in the desired masks and outputs both a "cleaned" root (events where
+        return self.root
+    
+
+#Class takes in the desired masks and outputs both a "cleaned" root (events where
 #The event did not have any of the flags set) and a "dirty" root (events where
 #The event did have the data cleaning flags set).
 class DCMacro(Macro):
     def __init__(self,procroot, masks,getdirty, *args, **kwargs):
         super(DCMacro, self).__init__(*args, **kwargs)
         self.masks = masks
-        self.procroot = procroot
+        self.procroot = prpath + "/" + procroot
         self.getdirty = getdirty # Bool for if you want to output dirty events root
         self.write_main()
         
@@ -159,7 +166,7 @@ class DCAProcMacro(Macro):
     def __init__(self,procroot, types, *args, **kwargs):
         super(DCAProcMacro, self).__init__(*args, **kwargs)
         self.types = types
-        self.procroot = procroot
+        self.procroot = prpath + "/" + procroot
         self.write_main()
         
     def write_main(self):
