@@ -1,4 +1,7 @@
-log/
+log/ratlogs/*
+log/ccs/*
+log/DQRecords/*
+log/json/*
 data/zdabs/*
 data/proc_roots/*
 batchscripts/*
