@@ -5,7 +5,7 @@ import os.path
 import optparse
 from subprocess import call
 import lib.macwrite as m
-import lib.batchwrite as b
+import lib.bashwrite as b
 import config.config as c
 import glob
 
@@ -104,8 +104,8 @@ def CleanRoot(rootfile):
         dcaproc = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
         dcaproc.save()
 
-        #Write your batchscript that runs the DC macros in order
-        dcscript = b.BatchScript(DCBATCH_NAME,DCMACRO_LIST)
+        #Write your bashscript that runs the DC macros in order
+        dcscript = b.BashScript(DCBATCH_NAME,DCMACRO_LIST)
         dcscript.save()
         #Run the script written using bash
         try:
@@ -144,10 +144,10 @@ def ProcessZdabs(zdablist):
         if DEBUG:
             print("MACROS WRITTEN AND SAVED.")
 
-        #Write your batchscript that runs all of these macros in order
-        procscript = b.BatchScript(PROCBATCH_NAME,PROCMACRO_LIST)
+        #Write your bashscript that runs all of these macros in order
+        procscript = b.BashScript(PROCBATCH_NAME,PROCMACRO_LIST)
         procscript.save()
-        dcscript = b.BatchScript(DCBATCH_NAME,DCMACRO_LIST)
+        dcscript = b.BashScript(DCBATCH_NAME,DCMACRO_LIST)
         dcscript.save()
         #Run the zdab -> ROOT processor
         try:

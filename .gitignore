@@ -1,3 +1,4 @@
+*.pyc
 log/ratlogs/*
 !log/ratlogs/.gitkeep
 log/ccs/*
@@ -11,7 +12,7 @@ data/zdabs/*
 !data/zdabs/.gitkeep
 !data/proc_roots/.gitkeep
 data/proc_roots/*
-batchscripts/*
-!batchscripts/.gitkeep
+bashscripts/*
+!bashscripts/.gitkeep
 outmacs/*
 !outmacs/.gitkeep

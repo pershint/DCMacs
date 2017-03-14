@@ -26,8 +26,8 @@ be integer ).
 
 
 When not in debug mode, macros that run the processing through RAT and the main
-batch script are deleted after use.  In debug mode, the batch script will stay in
-the ./batchscripts diretory and macros will stay in ./outmacs after running.
+bash script are deleted after use.  In debug mode, the bash script will stay in
+the ./bashscripts diretory and macros will stay in ./outmacs after running.
 
 Dependencies:
 
@@ -36,7 +36,7 @@ Dependencies:
 
 TO PORT TO YOUR MACHINE:
 
- - In ./lib/batchwrite.py, the "ratpath" variable must be changed to point to the
+ - In ./lib/bashwrite.py, the "ratpath" variable must be changed to point to the
 machine's home rat directory relative to wherever DCmacs will live.
  - In ./lib/macwrite.py, the default zdab directory is ./zdabs.  If you
 want to point to another directory you already have set up, you
