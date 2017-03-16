@@ -37,7 +37,10 @@ parser.add_option("-p","--procroot",action="store",dest="procroot",
         default=None,
         help="Give a name of a file in ./data/proc_roots to run ONLY" + \
                 "data cleaning on")
-
+parser.add_option("-D","--delproc",action="store_true",dest="delproc",
+	default=False,
+	help="Permanently delete the processed root after splitting into" + \
+		"clean and dirty DC rootfiles")
 parser.add_option("-a","--dcaproc",action="store_true",dest="dcaproc",
         default=False,
         help="Also run dcaproc after each data cleaning macro is run")
@@ -48,6 +51,7 @@ zdabname = options.zdabname
 runrange = options.runrange
 procroot = options.procroot
 dcaproc = options.dcaproc
+delproc=options.delproc
 #/PARSERUTILS
 
 
@@ -104,7 +108,7 @@ def getzdabnames():
     return zdablist
 
 def CleanRoot(rootfile):
-        datacleaning = m.DCMacro(rootfile,c.masks,c.getdirty,DCSPLIT,c.MATERIAL)
+        datacleaning = m.DCMacro(rootfile,c.masks,c.cdget,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
         if dcaproc:
@@ -120,7 +124,12 @@ def CleanRoot(rootfile):
         except:
             print("something went wrong running your script.  noooooo")
             raise
-       
+	if delproc:
+	    #Remove the processed root now that cleaning is complete
+            if DEBUG:
+                print("DELETING PROCESSED ROOT FILE.")
+            call(["rm",prpath + "/" + rootfile])
+      
 
         #if not in debug mode, do cleanup
         if not DEBUG:
@@ -148,7 +157,7 @@ def ProcessZdabs(zdablist):
         datacleaning.save()
 
         if dcaproc:
-            dcamacro = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
+            dcamacro = m.DCAProcMacro(processed_root,c.types,DCAPROC,c.MATERIAL)
             dcamacro.save()
 
         if DEBUG:
@@ -165,15 +174,20 @@ def ProcessZdabs(zdablist):
         except:
             print("something went wrong processing your zdabs.  noooooo")
             raise
-        #Move your processed root to the ./data/proc_roots directory
+        #Move files produced during processing
         procCleanUp()
+
         #Run your Data Cleaning Scripts
         try:
             dcscript.run()
         except:
             print("something went wrong cleaning processed roots. noooo")
             raise
-
+	if delproc:
+            if DEBUG:
+                print("REMOVING PROCESSED ROOT FILE.")
+	    #Remove the processed root now that cleaning is complete
+            call(["rm",prpath + "/" + processed_root])
        
 
         #if not in debug mode, do cleanup

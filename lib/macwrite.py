@@ -124,12 +124,13 @@ class ProcMacro(Macro):
 #The event did not have any of the flags set) and a "dirty" root (events where
 #The event did have the data cleaning flags set).
 class DCMacro(Macro):
-    def __init__(self,procroot, masks,getdirty, *args, **kwargs):
+    def __init__(self,procroot, masks,cdget,*args, **kwargs):
         super(DCMacro, self).__init__(*args, **kwargs)
         self.masks = masks
         self.procroot = prpath + "/" + procroot
         self.dcroot = drpath + "/" + procroot
-        self.getdirty = getdirty # Bool for if you want to output dirty events root
+        self.getclean = cdget[0]
+        self.getdirty = cdget[1] # Bools defined in config/config.py
         self.write_main()
         
     def write_main(self):
@@ -145,8 +146,9 @@ class DCMacro(Macro):
         for mask in self.masks:
             self.mac.write("/rat/proc/if dataCleaningCut\n")
             self.mac.write('/rat/procset flag "{}"\n'.format(mask))
-            self.mac.write('    /rat/proc outroot\n')
-            self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),mask))
+            if self.getclean:
+                self.mac.write('    /rat/proc outroot\n')
+                self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),mask))
             if self.getdirty:
                 self.mac.write("/rat/proc/else\n")
                 self.mac.write('    /rat/proc outroot\n')
