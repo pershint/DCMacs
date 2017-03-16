@@ -36,7 +36,7 @@ Dependencies:
 
 TO PORT TO YOUR MACHINE:
 
- - In ./lib/bashwrite.py, the "ratpath" variable must be changed to point to the
+ - In config/config.py, the "RATSRC" variable must be changed to point to the
 machine's home rat directory relative to wherever DCmacs will live.
  - In ./lib/macwrite.py, the default zdab directory is ./zdabs.  If you
 want to point to another directory you already have set up, you
