@@ -37,6 +37,10 @@ parser.add_option("-p","--procroot",action="store",dest="procroot",
         default=None,
         help="Give a name of a file in ./data/proc_roots to run ONLY" + \
                 "data cleaning on")
+parser.add_option("-P","--cleanall",action="store_true",dest="cleanall",
+        default=False,
+        help="Runs data cleaning on all of the processed roots in" + \
+                "./data/proc_roots")
 parser.add_option("-D","--delproc",action="store_true",dest="delproc",
 	default=False,
 	help="Permanently delete the processed root after splitting into" + \
@@ -50,6 +54,7 @@ DEBUG = options.debug
 zdabname = options.zdabname
 runrange = options.runrange
 procroot = options.procroot
+cleanall = options.cleanall
 dcaproc = options.dcaproc
 delproc=options.delproc
 #/PARSERUTILS
@@ -99,7 +104,6 @@ def getzdabnames():
                 "trying to process them as requested.")
         zdabpaths = glob.glob(zdabpath + '/*.zdab')
         print(zdabpaths)
-        zdablist = []
         for zdab in zdabpaths:
             zdablist.append(zdab.replace(zdabpath + "/",""))
         if DEBUG:
@@ -107,7 +111,25 @@ def getzdabnames():
             print(zdablist)
     return zdablist
 
-def CleanRoot(rootfile):
+def rootstoclean():
+    rootlist = []
+    if procroot:
+        rootlist.append(procroot)
+    else:
+        procrootpaths = glob.glob(prpath + "/*.root")
+        for pr in procrootpaths:
+            pr = pr.replace(prpath + "/","")
+            if pr.find("ntuple") == 1:
+                continue
+            else:
+                rootlist.append(pr.replace(prpath + "/",""))
+        if DEBUG:
+            print("LIST OF ROOTS GOING TO CLEANING: \n")
+            print(rootlist)
+    return rootlist
+
+def CleanRoots(rootlist):
+    for rootfile in rootlist:
         datacleaning = m.DCMacro(rootfile,c.masks,c.cdget,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
@@ -208,8 +230,9 @@ def ProcessZdabs(zdablist):
 
 
 if __name__ == '__main__':
-    if procroot:
-        CleanRoot(procroot)
+    if procroot or cleanall:
+        rlist = rootstoclean()
+        CleanRoots(rlist)
     else:
         zdablist = getzdabnames()
         ProcessZdabs(zdablist)
