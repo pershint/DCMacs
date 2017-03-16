@@ -93,7 +93,8 @@ class ProcMacro(Macro):
         self.mac.write('    /rat/procset trigType "Pedestal"\n')
         self.mac.write("/rat/proc/else\n")
         if self.material == "water":
-            self.mac.write('    /rat/proc waterFitter\n')
+            #FIXME: changed to waterFitter once it has been pushed to RAT
+            self.mac.write('    /rat/proc partialWaterFitter\n')
         elif self.material == "partial":
             self.mac.write('    /rat/proc partialWaterFitter\n')
         elif self.material == "scintillator":
