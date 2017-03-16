@@ -9,6 +9,8 @@ basepath = os.path.dirname(__file__)
 macropath = os.path.abspath(os.path.join(basepath, "..","outmacs"))
 zdpath = os.path.abspath(os.path.join(basepath, "..","data","zdabs"))
 prpath = os.path.abspath(os.path.join(basepath, "..","data","proc_roots"))
+drpath = os.path.abspath(os.path.join(basepath, "..","data","dc_roots"))
+
 
 #Base class for all macros.  Writes to ignore Muonic/Hadronic processes
 class Macro(object):
@@ -59,14 +61,14 @@ class FPMacro(Macro):
 class ProcMacro(Macro):
     def __init__(self,zdab, *args, **kwargs):
         super(ProcMacro, self).__init__(*args, **kwargs)
-        self.zdab = zdpath + "/" + zdab
-        self.nt = zdab.rstrip(".zdab") + "_ntuple.root"
-        self.root = zdab.rstrip(".zdab") + "_processed.root"
+        self.zdabloc = zdpath + "/" + zdab
+        self.ntloc = prpath + "/" + zdab.rstrip(".zdab") + "_ntuple.root"
+        self.rootloc = prpath + "/" + zdab.rstrip(".zdab") + "_processed.root"
         self.write_main()
         
     def write_main(self):
         #TODO: Load in particular zdab?
-        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdab))
+        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdabloc))
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
@@ -106,16 +108,16 @@ class ProcMacro(Macro):
         self.mac.write('/rat/proc/endif\n\n')
 
         self.mac.write('/rat/proc outntuple\n')
-        self.mac.write('/rat/procset file "{}"\n'.format(self.nt))
+        self.mac.write('/rat/procset file "{}"\n'.format(self.ntloc))
         self.mac.write('/rat/proclast outroot\n')
-        self.mac.write('/rat/procset file "{}"\n'.format(self.root))
+        self.mac.write('/rat/procset file "{}"\n'.format(self.rootloc))
         self.mac.write("### END EVENT LOOP ###\n\n")
 
         self.mac.write("/rat/inzdab/read\n")
         self.mac.write("exit")
 
     def get_procrootname(self):
-        return self.root
+        return self.rootloc.replace(prpath + "/","")
     
 
 #Class takes in the desired masks and outputs both a "cleaned" root (events where
@@ -126,6 +128,7 @@ class DCMacro(Macro):
         super(DCMacro, self).__init__(*args, **kwargs)
         self.masks = masks
         self.procroot = prpath + "/" + procroot
+        self.dcroot = drpath + "/" + procroot
         self.getdirty = getdirty # Bool for if you want to output dirty events root
         self.write_main()
         
@@ -143,11 +146,11 @@ class DCMacro(Macro):
             self.mac.write("/rat/proc/if dataCleaningCut\n")
             self.mac.write('/rat/procset flag "{}"\n'.format(mask))
             self.mac.write('    /rat/proc outroot\n')
-            self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.procroot.rstrip('.root'),mask))
+            self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),mask))
             if self.getdirty:
                 self.mac.write("/rat/proc/else\n")
                 self.mac.write('    /rat/proc outroot\n')
-                self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.procroot.rstrip('.root'),mask))
+                self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),mask))
             self.mac.write("/rat/proc/endif\n")
 
         self.mac.write("### END EVENT LOOP ###\n\n")
@@ -163,6 +166,7 @@ class DCAProcMacro(Macro):
         super(DCAProcMacro, self).__init__(*args, **kwargs)
         self.types = types
         self.procroot = prpath + "/" + procroot
+        self.dcroot = drpath + "/" + procroot
         self.write_main()
         
     def write_main(self):
@@ -181,7 +185,7 @@ class DCAProcMacro(Macro):
             self.mac.write('/rat/procset type "{}"\n'.format(onetype))
         self.mac.write('/rat/proc outroot\n')
         self.mac.write('/rat/procset file "{}_dcaProc.root"\n'.format( \
-                self.procroot.rstrip(".root")))
+                self.dccroot.rstrip(".root")))
 
         self.mac.write("### END EVENT LOOP ###\n\n")
 

@@ -16,6 +16,7 @@ rlpath = os.path.abspath(os.path.join(logpath,"ratlogs"))
 ljpath = os.path.abspath(os.path.join(logpath,"json"))
 prpath = m.prpath
 zdabpath = m.zdpath
+drpath = m.drpath
 RATSRC = c.RATSRC
 
 #PARSERUTILS
@@ -66,23 +67,10 @@ else:
     DCMACRO_LIST = [DCSPLIT]
 #/FILENAMES
 
-def dcCleanUp():
-    '''
-    Moves files resulting from cleaning a proc_root to their proper directory.
-    '''
-    roots = glob.glob(homepath + "/*.root")
-    print(roots)
-    for root in roots:
-        call(["mv",root,drpath])
-
 def procCleanUp():
     '''
     Moves files resulting from processing a zdab to their proper directory.
     ''' 
-    roots = glob.glob(homepath + "/*.root")
-    print(roots)
-    for root in roots:
-        call(["mv",root,prpath])
     jsons = glob.glob(homepath + "/*.json")
     for ajson in jsons:
         call(["mv",ajson,ljpath])
