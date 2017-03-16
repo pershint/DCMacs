@@ -35,13 +35,18 @@ parser.add_option("-r","--runrange",action="store",dest="runrange",
 parser.add_option("-p","--procroot",action="store",dest="procroot",
         default=None,
         help="Give a name of a file in ./data/proc_roots to run ONLY" + \
-                "data cleaning and the dcaProc on")
+                "data cleaning on")
+
+parser.add_option("-a","--dcaproc",action="store_true",dest="dcaproc",
+        default=False,
+        help="Also run dcaproc after each data cleaning macro is run")
 (options,args) = parser.parse_args()
 
 DEBUG = options.debug
 zdabname = options.zdabname
 runrange = options.runrange
 procroot = options.procroot
+dcaproc = options.dcaproc
 #/PARSERUTILS
 
 
@@ -55,7 +60,10 @@ PROCBATCH_NAME = "ZDABProcessRunner.sh"
 DCBATCH_NAME = "DCRATRunner.sh"
 #Order is important here!  See ./templates/order.txt for reference
 PROCMACRO_LIST = [FIRSTPASS, PROCMAIN]
-DCMACRO_LIST = [DCSPLIT, DCAPROC]
+if dcaproc:
+    DCMACRO_LIST = [DCSPLIT, DCAPROC]
+else:
+    DCMACRO_LIST = [DCSPLIT]
 #/FILENAMES
 
 def dcCleanUp():
@@ -110,8 +118,9 @@ def CleanRoot(rootfile):
         datacleaning = m.DCMacro(rootfile,c.masks,c.getdirty,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
-        dcaproc = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
-        dcaproc.save()
+        if dcaproc:
+            dcamacro = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
+            dcamacro.save()
 
         #Write your bashscript that runs the DC macros in order
         dcscript = b.BashScript(DCBATCH_NAME,DCMACRO_LIST)
@@ -130,8 +139,9 @@ def CleanRoot(rootfile):
             del dcscript
             datacleaning.delete()
             del datacleaning
-            dcaproc.delete()
-            del dcaproc
+            if dcaproc:
+                dcamacro.delete()
+                del dcamacro
 
 
 def ProcessZdabs(zdablist):
@@ -148,8 +158,10 @@ def ProcessZdabs(zdablist):
         datacleaning = m.DCMacro(processed_root,c.masks,c.getdirty,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
-        dcaproc = m.DCAProcMacro(processed_root,c.types,DCAPROC,c.MATERIAL)
-        dcaproc.save()
+        if dcaproc:
+            dcamacro = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
+            dcamacro.save()
+
         if DEBUG:
             print("MACROS WRITTEN AND SAVED.")
 
@@ -187,8 +199,9 @@ def ProcessZdabs(zdablist):
             del proc
             datacleaning.delete()
             del datacleaning
-            dcaproc.delete()
-            del dcaproc
+            if dcaproc:
+                dcamacro.delete()
+                del dcamacro
 
 
 if __name__ == '__main__':
