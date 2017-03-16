@@ -8,19 +8,19 @@ from subprocess import call
 
 basepath = os.path.dirname(__file__)
 bashpath = os.path.abspath(os.path.join(basepath, "..", "bashscripts"))
-ratpath = os.path.abspath(os.path.join(basepath, "..","..",".."))
 macropath = m.macropath
 
 class BashScript(object):
-    def __init__(self,name,macro_list):
+    def __init__(self,name,ratsource,macro_list):
         self.name = name
+	self.ratsource = ratsource
         self.macro_list = macro_list
         self.bashloc = bashpath + "/" + self.name
         self.bashfile = open(self.bashloc,"w")
         self.write()
 
     def write(self):
-        self.bashfile.write("source " + ratpath + "/env.sh\n")
+        self.bashfile.write("source " + self.ratsource + "\n")
         for macroname in self.macro_list:
             self.bashfile.write("rat " + macropath + "/" + macroname + "\n")
 

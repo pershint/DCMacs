@@ -16,7 +16,7 @@ rlpath = os.path.abspath(os.path.join(logpath,"ratlogs"))
 ljpath = os.path.abspath(os.path.join(logpath,"json"))
 prpath = m.prpath
 zdabpath = m.zdpath
-
+RATSRC = c.RATSRC
 
 #PARSERUTILS
 parser = optparse.OptionParser()
@@ -95,6 +95,7 @@ def getzdabnames():
         sys.exit(0)
     if zdabname:
         zdablist.append(options.zdabname)
+	print("ZDAB CHOSEN TO PROCESS:" + str(zdablist))
     elif runrange:
         print("Not yet implemented.  Only YOU can implement this feature!")
         sys.exit(0)
@@ -112,7 +113,7 @@ def getzdabnames():
         if DEBUG:
             print("LIST OF ZDABS CHOSEN TO PROCESS: \n")
             print(zdablist)
-        return zdablist
+    return zdablist
 
 def CleanRoot(rootfile):
         datacleaning = m.DCMacro(rootfile,c.masks,c.getdirty,DCSPLIT,c.MATERIAL)
@@ -123,7 +124,7 @@ def CleanRoot(rootfile):
             dcamacro.save()
 
         #Write your bashscript that runs the DC macros in order
-        dcscript = b.BashScript(DCBATCH_NAME,DCMACRO_LIST)
+        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
         dcscript.save()
         #Run the script written using bash
         try:
@@ -166,9 +167,9 @@ def ProcessZdabs(zdablist):
             print("MACROS WRITTEN AND SAVED.")
 
         #Write your bashscript that runs all of these macros in order
-        procscript = b.BashScript(PROCBATCH_NAME,PROCMACRO_LIST)
+        procscript = b.BashScript(PROCBATCH_NAME,RATSRC,PROCMACRO_LIST)
         procscript.save()
-        dcscript = b.BashScript(DCBATCH_NAME,DCMACRO_LIST)
+        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
         dcscript.save()
         #Run the zdab -> ROOT processor
         try:
