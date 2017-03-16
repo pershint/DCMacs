@@ -58,6 +58,15 @@ PROCMACRO_LIST = [FIRSTPASS, PROCMAIN]
 DCMACRO_LIST = [DCSPLIT, DCAPROC]
 #/FILENAMES
 
+def dcCleanUp():
+    '''
+    Moves files resulting from cleaning a proc_root to their proper directory.
+    '''
+    roots = glob.glob(homepath + "/*.root")
+    print(roots)
+    for root in roots:
+        call(["mv",root,drpath])
+
 def procCleanUp():
     '''
     Moves files resulting from processing a zdab to their proper directory.

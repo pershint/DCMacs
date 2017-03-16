@@ -12,7 +12,10 @@ data/zdabs/*
 !data/zdabs/.gitkeep
 !data/proc_roots/.gitkeep
 data/proc_roots/*
+data/dc_roots/*
+!data/dc_roots/.gitkeep
 bashscripts/*
 !bashscripts/.gitkeep
 outmacs/*
 !outmacs/.gitkeep
+
