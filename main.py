@@ -130,7 +130,8 @@ def rootstoclean():
 
 def CleanRoots(rootlist):
     for rootfile in rootlist:
-        datacleaning = m.DCMacro(rootfile,c.masks,c.cdget,DCSPLIT,c.MATERIAL)
+        datacleaning = m.DCMacro(rootfile,c.analysis_flags,c.cdget, \
+                DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
         if dcaproc:
@@ -171,11 +172,12 @@ def ProcessZdabs(zdablist):
         fp = m.FPMacro(zdabname,FIRSTPASS,c.MATERIAL)
         fp.save()
 
-        proc = m.ProcMacro(zdabname,PROCMAIN,c.MATERIAL)
+        proc = m.ProcMacro(zdabname,c.default_apply,PROCMAIN,c.MATERIAL)
         processed_root = proc.get_procrootname()
         proc.save()
 
-        datacleaning = m.DCMacro(processed_root,c.masks,c.getdirty,DCSPLIT,c.MATERIAL)
+        datacleaning = m.DCMacro(processed_root,c.analysis_flags, \
+                c.cdget,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
         if dcaproc:

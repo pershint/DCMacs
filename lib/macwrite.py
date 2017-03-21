@@ -59,9 +59,10 @@ class FPMacro(Macro):
 
 #Class writes your Main processing loop
 class ProcMacro(Macro):
-    def __init__(self,zdab, *args, **kwargs):
+    def __init__(self,zdab,defapply, *args, **kwargs):
         super(ProcMacro, self).__init__(*args, **kwargs)
         self.zdabloc = zdpath + "/" + zdab
+        self.defapply = defapply
         self.ntloc = prpath + "/" + zdab.rstrip(".zdab") + "_ntuple.root"
         self.rootloc = prpath + "/" + zdab.rstrip(".zdab") + "_processed.root"
         self.write_main()
@@ -76,7 +77,7 @@ class ProcMacro(Macro):
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc calibratePMT\n")
         self.mac.write("/rat/proc datacleaning\n")
-        self.mac.write('/rat/procset mask "default"\n')
+        self.mac.write('/rat/procset mask "{}"\n'.format(self.defapply))
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
         self.mac.write("/rat/procset pass 2\n")
         self.mac.write("/rat/proc hitcleaning\n")
@@ -124,9 +125,9 @@ class ProcMacro(Macro):
 #The event did not have any of the flags set) and a "dirty" root (events where
 #The event did have the data cleaning flags set).
 class DCMacro(Macro):
-    def __init__(self,procroot, masks,cdget,*args, **kwargs):
+    def __init__(self,procroot, analysis_flags,cdget,*args, **kwargs):
         super(DCMacro, self).__init__(*args, **kwargs)
-        self.masks = masks
+        self.aflags = analysis_flags
         self.procroot = prpath + "/" + procroot
         self.dcroot = drpath + "/" + procroot
         self.getclean = cdget[0]
@@ -143,7 +144,7 @@ class DCMacro(Macro):
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc datacleaning\n")
         self.mac.write('/rat/procset mask "default"\n\n')
-        for mask in self.masks:
+        for mask in self.aflags:
             self.mac.write("/rat/proc/if dataCleaningCut\n")
             self.mac.write('/rat/procset flag "{}"\n'.format(mask))
             if self.getclean:
