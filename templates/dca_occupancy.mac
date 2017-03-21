@@ -1,0 +1,49 @@
+# File: dca_occupancy.mac
+# Brief: Macro showing how to use occupancy features of DCAProc
+#
+# Date: 2015-07-13
+# Contact: Kevin Nuckolls, <knuckolls@berkeley.edu>
+#
+# This macro demonstrates how to call and set the occupancy features
+# of the Data Cleaning Analysis (DCA) Processor. It simulates electrons
+# at the center of the detector at 2.5MeV and analyzes the slot, crate,
+# and channel occupancy of these events. It then writes out a series of
+# histograms displaying these qualities to a file called "dca_occupancy_hist.root".
+
+
+# Don't care about hadrons or muons so quicker not to initialise these processes
+/rat/physics_list/OmitMuonicProcesses true
+/rat/physics_list/OmitHadronicProcesses true
+
+# Select the snoplus geometry file
+/rat/db/set DETECTOR geo_file "geo/snoplus.geo"
+
+/run/initialize
+
+# BEGIN EVENT LOOP
+/rat/proc frontend
+/rat/proc trigger
+/rat/proc eventbuilder
+/rat/proc calibratePMT
+/rat/proc count
+/rat/procset update 10
+
+/rat/proc dcaProc
+#/rat/procset bitmask 0x7 # Would set "slot","crate","channel"
+/rat/procset type "slot" # bitmask = 0x1
+/rat/procset type "crate" # bitmask = 0x2
+/rat/procset type "channel" # bitmask = 0x4
+/rat/procset file "dca_occupancy_hist.root"
+
+/rat/proclast outroot
+/rat/procset file "snoplus_electrons_test.root"
+# END EVENTLOOP
+
+/generator/add combo gun:fill:poisson
+/generator/vtx/set e- 0 0 0 2.5
+/generator/pos/set 0.0 0.0 0.0
+/generator/rate/set 1
+
+# generate 100 events
+/rat/run/start 100
+exit

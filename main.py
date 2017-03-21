@@ -48,6 +48,10 @@ parser.add_option("-D","--delproc",action="store_true",dest="delproc",
 parser.add_option("-a","--dcaproc",action="store_true",dest="dcaproc",
         default=False,
         help="Also run dcaproc after each data cleaning macro is run")
+parser.add_option("-O","--occupancy",action="store_true",dest="occupancy",
+        default=True,
+        help="Run the 'occupancy' configuration of the dcaproc after" + \
+                "each data cleaning macro is run")
 (options,args) = parser.parse_args()
 
 DEBUG = options.debug
@@ -56,6 +60,7 @@ runrange = options.runrange
 procroot = options.procroot
 cleanall = options.cleanall
 dcaproc = options.dcaproc
+occupancy = options.occupancy
 delproc=options.delproc
 #/PARSERUTILS
 
@@ -65,16 +70,23 @@ FIRSTPASS = "firstpass.mac"
 PROCMAIN = "processing.mac"
 DCSPLIT = "CleanData.mac"  #Outputs two roots per flag mask; one clean, one dirty
 DCAPROC = "RunDCAProc.mac" #Outputs a root with various histograms describing DC
+OCCPROC = "RunOccProc.mac"
 
 PROCBATCH_NAME = "ZDABProcessRunner.sh"
 DCBATCH_NAME = "DCRATRunner.sh"
+#/FILENAMES
+
+#Types of histograms generated when the occupancy macro is run
+occtypes = ["slot","crate","channel"]
+
 #Order is important here!  See ./templates/order.txt for reference
 PROCMACRO_LIST = [FIRSTPASS, PROCMAIN]
+DCMACRO_LIST = [DCSPLIT]
 if dcaproc:
-    DCMACRO_LIST = [DCSPLIT, DCAPROC]
-else:
-    DCMACRO_LIST = [DCSPLIT]
-#/FILENAMES
+    DCMACRO_LIST.append(DCAPROC)
+if occupancy:
+    DCMACRO_LIST.append(OCCPROC)
+
 
 def procCleanUp():
     '''
@@ -138,6 +150,10 @@ def CleanRoots(rootlist):
             dcamacro = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
             dcamacro.save()
 
+        if occupancy:
+            occmacro = m.DCAProcMacro(rootfile,occtypes,OCCPROC,c.MATERIAL)
+            occmacro.save()
+
         #Write your bashscript that runs the DC macros in order
         dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
         dcscript.save()
@@ -163,6 +179,9 @@ def CleanRoots(rootlist):
             if dcaproc:
                 dcamacro.delete()
                 del dcamacro
+            if occupancy:
+                occmacro.delete()
+                del occmacro
 
 
 def ProcessZdabs(zdablist):
@@ -183,6 +202,9 @@ def ProcessZdabs(zdablist):
         if dcaproc:
             dcamacro = m.DCAProcMacro(processed_root,c.types,DCAPROC,c.MATERIAL)
             dcamacro.save()
+        if occupancy:
+            occmacro = m.DCAProcMacro(processed_root,occtypes,OCCPROC,c.MATERIAL)
+            occmacro.save()
 
         if DEBUG:
             print("MACROS WRITTEN AND SAVED.")
@@ -229,6 +251,9 @@ def ProcessZdabs(zdablist):
             if dcaproc:
                 dcamacro.delete()
                 del dcamacro
+            if occupancy:
+                occmacro.delete()
+                del occmacro
 
 
 if __name__ == '__main__':
