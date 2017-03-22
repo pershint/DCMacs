@@ -59,7 +59,7 @@ class FPMacro(Macro):
 
 #Class writes your Main processing loop
 class ProcMacro(Macro):
-    def __init__(self,zdab,defapply, *args, **kwargs):
+    def __init__(self,zdab,defapply,procopts, *args, **kwargs):
         super(ProcMacro, self).__init__(*args, **kwargs)
         self.zdabloc = zdpath + "/" + zdab
         self.defapply = defapply
@@ -80,36 +80,37 @@ class ProcMacro(Macro):
         self.mac.write('/rat/procset mask "{}"\n'.format(self.defapply))
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
         self.mac.write("/rat/procset pass 2\n")
-        self.mac.write("/rat/proc hitcleaning\n")
-        self.mac.write('/rat/procset mask "default"\n')
-        self.mac.write("/rat/proc dqrunproc\n")
-        self.mac.write("/rat/proc dqpmtproc\n")
-        self.mac.write("/rat/proc dqtimeproc\n")
-        self.mac.write("/rat/proc dqtriggerproc\n")
-        self.mac.write("/rat/proc chanSWStatusCalib\n\n")
+        if procopts["fullprocess"]:
+            self.mac.write("/rat/proc hitcleaning\n")
+            self.mac.write('/rat/procset mask "default"\n')
+            self.mac.write("/rat/proc dqrunproc\n")
+            self.mac.write("/rat/proc dqpmtproc\n")
+            self.mac.write("/rat/proc dqtimeproc\n")
+            self.mac.write("/rat/proc dqtriggerproc\n")
+            self.mac.write("/rat/proc chanSWStatusCalib\n\n")
 
-        self.mac.write("# Conditional logic for construction (exclude specific" + \
-                "trigger types\n")
-        self.mac.write("/rat/proc/if trigTypeSelector\n")
-        self.mac.write('    /rat/procset trigType "PulseGT"\n')
-        self.mac.write('    /rat/procset trigType "EXTASY"\n')
-        self.mac.write('    /rat/procset trigType "Pedestal"\n')
-        self.mac.write("/rat/proc/else\n")
-        if self.material == "water":
-            #FIXME: changed to waterFitter once it has been pushed to RAT
-            self.mac.write('    /rat/proc partialWaterFitter\n')
-        elif self.material == "partial":
-            self.mac.write('    /rat/proc partialWaterFitter\n')
-        elif self.material == "scintillator":
-            self.mac.write('    /rat/proc scintFitter\n')
-        else:
-            print("Invalid material selected (OR TeDiol not implemented here.)" + \
-                    "Try again with your material selection in ./config.")
-            sys.exit(0)
-        self.mac.write('/rat/proc/endif\n\n')
-
-        self.mac.write('/rat/proc outntuple\n')
-        self.mac.write('/rat/procset file "{}"\n'.format(self.ntloc))
+            self.mac.write("# Conditional logic for construction (exclude specific" + \
+                    "trigger types\n")
+            self.mac.write("/rat/proc/if trigTypeSelector\n")
+            self.mac.write('    /rat/procset trigType "PulseGT"\n')
+            self.mac.write('    /rat/procset trigType "EXTASY"\n')
+            self.mac.write('    /rat/procset trigType "Pedestal"\n')
+            self.mac.write("/rat/proc/else\n")
+            if self.material == "water":
+                #FIXME: changed to waterFitter once it has been pushed to RAT
+                self.mac.write('    /rat/proc partialWaterFitter\n')
+            elif self.material == "partial":
+                self.mac.write('    /rat/proc partialWaterFitter\n')
+            elif self.material == "scintillator":
+                self.mac.write('    /rat/proc scintFitter\n')
+            else:
+                print("Invalid material selected (OR TeDiol not implemented here.)" + \
+                        "Try again with your material selection in ./config.")
+                sys.exit(0)
+            self.mac.write('/rat/proc/endif\n\n')
+        if procopts["ntuple"]:
+            self.mac.write('/rat/proc outntuple\n')
+            self.mac.write('/rat/procset file "{}"\n'.format(self.ntloc))
         self.mac.write('/rat/proclast outroot\n')
         self.mac.write('/rat/procset file "{}"\n'.format(self.rootloc))
         self.mac.write("### END EVENT LOOP ###\n\n")
@@ -125,25 +126,24 @@ class ProcMacro(Macro):
 #The event did not have any of the flags set) and a "dirty" root (events where
 #The event did have the data cleaning flags set).
 class DCMacro(Macro):
-    def __init__(self,procroot, analysis_flags,cdget,*args, **kwargs):
+    def __init__(self,procroot, analysis_flags,dcopts,*args, **kwargs):
         super(DCMacro, self).__init__(*args, **kwargs)
         self.aflags = analysis_flags
         self.procroot = prpath + "/" + procroot
         self.dcroot = drpath + "/" + procroot
-        self.getclean = cdget[0]
-        self.getdirty = cdget[1] # Bools defined in config/config.py
+        self.getclean = dcopts["getclean"]
+        self.getdirty = dcopts["getdirty"]
         self.write_main()
         
     def write_main(self):
-        #TODO: Load in particular zdab?
-        #FIXME: Load in the processed root here?
         self.mac.write('/rat/inroot/load {}\n'.format(self.procroot))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
 
         self.mac.write("### EVENT LOOP ###\n")
-        self.mac.write("/rat/proc datacleaning\n")
-        self.mac.write('/rat/procset mask "default_apply"\n\n')
+        #FIXME: Need these lines if DCing data processed on the grid
+        #self.mac.write("/rat/proc datacleaning\n")
+        #self.mac.write('/rat/procset mask "{}"\n'.format("default_apply"))
         for mask in self.aflags:
             self.mac.write("/rat/proc/if dataCleaningCut\n")
             self.mac.write('/rat/procset flag "{}"\n'.format(mask))
@@ -173,8 +173,6 @@ class DCAProcMacro(Macro):
         self.write_main()
         
     def write_main(self):
-        #TODO: Load in particular zdab?
-        #FIXME: Load in the processed root here?
         self.mac.write('/rat/inroot/load {}\n'.format(self.procroot))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")

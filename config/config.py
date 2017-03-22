@@ -15,7 +15,8 @@ RATSRC = ratpath + "/" + sourcetype
 default_apply = "default_apply"
 
 #analysis_flags used to make CleanData.mac. See README for more info. on usage. 
-analysis_flags = ["neckcut","muontag"]
+#analysis_flags = ["neckcut","muontag"]
+analysis_flags = ["ringoffire"]
 
 #Options for changing the output of the dcaProc ran in RunDCAProc.mac
 types = ["timediff","flagged"]
@@ -23,7 +24,13 @@ types = ["timediff","flagged"]
 #Toggles if you want to save the "clean"/"dirty" roots after data cleaning
 getclean = False
 getdirty = True
-cdget = [getclean,getdirty]  
+dcopts = {"getclean":getclean,"getdirty":getdirty}  
+
+#if fullprocess is True, runs hit cleaning, reconstruction, the whole 9 yards
+#if procntuple is true, also outputs the processed ntuple
+fullprocess = False
+procntuple = True
+procopts = {"fullprocess":fullprocess, "ntuple":procntuple}
 #  ---------------------- END USER MANIPULATION -------------------- #
 #  ----------------------------------------------------------------- #
 

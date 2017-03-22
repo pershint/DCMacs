@@ -49,7 +49,7 @@ parser.add_option("-a","--dcaproc",action="store_true",dest="dcaproc",
         default=False,
         help="Also run dcaproc after each data cleaning macro is run")
 parser.add_option("-O","--occupancy",action="store_true",dest="occupancy",
-        default=True,
+        default=False,
         help="Run the 'occupancy' configuration of the dcaproc after" + \
                 "each data cleaning macro is run")
 (options,args) = parser.parse_args()
@@ -142,7 +142,7 @@ def rootstoclean():
 
 def CleanRoots(rootlist):
     for rootfile in rootlist:
-        datacleaning = m.DCMacro(rootfile,c.analysis_flags,c.cdget, \
+        datacleaning = m.DCMacro(rootfile,c.analysis_flags,c.dcopts, \
                 DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
@@ -191,12 +191,12 @@ def ProcessZdabs(zdablist):
         fp = m.FPMacro(zdabname,FIRSTPASS,c.MATERIAL)
         fp.save()
 
-        proc = m.ProcMacro(zdabname,c.default_apply,PROCMAIN,c.MATERIAL)
+        proc = m.ProcMacro(zdabname,c.default_apply,c.procopts,PROCMAIN,c.MATERIAL)
         processed_root = proc.get_procrootname()
         proc.save()
 
         datacleaning = m.DCMacro(processed_root,c.analysis_flags, \
-                c.cdget,DCSPLIT,c.MATERIAL)
+                c.dcopts,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
         if dcaproc:
@@ -209,9 +209,10 @@ def ProcessZdabs(zdablist):
         if DEBUG:
             print("MACROS WRITTEN AND SAVED.")
 
-        #Write your bashscript that runs all of these macros in order
+        #Write your bashscript that runs processing
         procscript = b.BashScript(PROCBATCH_NAME,RATSRC,PROCMACRO_LIST)
         procscript.save()
+        #Write your bashscript that runs data cleaning
         dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
         dcscript.save()
         #Run the zdab -> ROOT processor
