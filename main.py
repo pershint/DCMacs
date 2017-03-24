@@ -76,8 +76,6 @@ PROCBATCH_NAME = "ZDABProcessRunner.sh"
 DCBATCH_NAME = "DCRATRunner.sh"
 #/FILENAMES
 
-#Types of histograms generated when the occupancy macro is run
-occtypes = ["slot","crate","channel"]
 
 #Order is important here!  See ./templates/order.txt for reference
 PROCMACRO_LIST = [FIRSTPASS, PROCMAIN]
@@ -151,7 +149,7 @@ def CleanRoots(rootlist):
             dcamacro.save()
 
         if occupancy:
-            occmacro = m.DCAProcMacro(rootfile,occtypes,OCCPROC,c.MATERIAL)
+            occmacro = m.OccProcMacro(rootfile,OCCPROC,c.MATERIAL)
             occmacro.save()
 
         #Write your bashscript that runs the DC macros in order
@@ -203,7 +201,7 @@ def ProcessZdabs(zdablist):
             dcamacro = m.DCAProcMacro(processed_root,c.types,DCAPROC,c.MATERIAL)
             dcamacro.save()
         if occupancy:
-            occmacro = m.DCAProcMacro(processed_root,occtypes,OCCPROC,c.MATERIAL)
+            occmacro = m.OccProcMacro(processed_root,OCCPROC,c.MATERIAL)
             occmacro.save()
 
         if DEBUG:

@@ -193,3 +193,32 @@ class DCAProcMacro(Macro):
 
         self.mac.write("exit")
 
+class OccProcMacro(Macro):
+    def __init__(self,procroot, *args, **kwargs):
+        super(OccProcMacro, self).__init__(*args, **kwargs)
+        self.types = ["slot","crate","channel"]
+        self.procroot = prpath + "/" + procroot
+        self.dcroot = drpath + "/" + procroot
+        self.write_main()
+        
+    def write_main(self):
+        self.mac.write('/rat/inroot/load {}\n'.format(self.procroot))
+        self.mac.write('\n')
+        self.mac.write("/run/initialize\n\n")
+
+        self.mac.write("### EVENT LOOP ###\n")
+        self.mac.write("/rat/proc count\n")
+        self.mac.write("/rat/procset update 100\n\n")
+
+        self.mac.write("/rat/proc dcaProc\n")
+        for onetype in self.types:
+            self.mac.write('/rat/procset type "{}"\n'.format(onetype))
+        self.mac.write('/rat/procset file "{}_occProcHists.root"\n'.format( \
+                self.dcroot.rstrip(".root")))
+
+        self.mac.write("### END EVENT LOOP ###\n\n")
+
+        self.mac.write("/rat/inroot/read\n\n")
+
+        self.mac.write("exit")
+
