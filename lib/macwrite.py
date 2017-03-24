@@ -142,8 +142,8 @@ class DCMacro(Macro):
 
         self.mac.write("### EVENT LOOP ###\n")
         #FIXME: Need these lines if DCing data processed on the grid
-        #self.mac.write("/rat/proc datacleaning\n")
-        #self.mac.write('/rat/procset mask "{}"\n'.format("default_apply"))
+        self.mac.write("/rat/proc datacleaning\n")
+        self.mac.write('/rat/procset mask "{}"\n'.format("default_apply"))
         for mask in self.aflags:
             self.mac.write("/rat/proc/if dataCleaningCut\n")
             self.mac.write('/rat/procset flag "{}"\n'.format(mask))
@@ -184,8 +184,7 @@ class DCAProcMacro(Macro):
         self.mac.write("/rat/proc dcaProc\n")
         for onetype in self.types:
             self.mac.write('/rat/procset type "{}"\n'.format(onetype))
-        self.mac.write('/rat/proc outroot\n')
-        self.mac.write('/rat/procset file "{}_dcaProc.root"\n'.format( \
+        self.mac.write('/rat/procset file "{}_dcaProcHists.root"\n'.format( \
                 self.dcroot.rstrip(".root")))
 
         self.mac.write("### END EVENT LOOP ###\n\n")
