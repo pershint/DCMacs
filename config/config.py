@@ -12,12 +12,14 @@ sourcetype = "env.sh"
 RATSRC = ratpath + "/" + sourcetype
 
 #Toggles which mask should be used in 2nd pass processing (processing.mac).
-#Don't change this unless you really know what you're doing!
+#This doesn't split the data; just indicates which flags an event COULD get
+#Don't change this unless you know what you're doing!
 default_apply = "default_apply"
 
-#analysis_flags used to make CleanData.mac. See README for more info. on usage. 
-#analysis_flags = ["neckcut","muontag"]
-analysis_flags = ["zerozerocut"]
+#Analysis mask used to actually split the data with CleanData.mac.
+#See README for more info. on usage. 
+analysis_flags = ["analysis_mask"]
+
 
 #Options for changing the output of the dcaProc ran in RunDCAProc.mac
 types = ["timediff","flagged"]
