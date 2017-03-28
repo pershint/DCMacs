@@ -35,17 +35,18 @@ class Macro(object):
         os.remove(self.macloc)
         print("removed " + self.filename + "from outmacs\n")
 
-#Class writes your first pass data cleaning macro
+#Class writes your first pass data cleaning macro for a list of zdabs associated with one run
 class FPMacro(Macro):
-    def __init__(self,zdab, *args, **kwargs):
+    def __init__(self,zdablist, *args, **kwargs):
         super(FPMacro, self).__init__(*args, **kwargs)
-        self.zdab = zdpath + "/" + zdab
+        self.zdablist = zdablist
         self.write_main()
         self.save()
         
     def write_main(self):
-        #TODO: Load in particular zdab?
-        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdab))
+        for zdab in self.zdablist:
+            zdab = zdpath + "/" + zdab
+            self.mac.write('/rat/inzdab/load {}\n'.format(zdab))
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
@@ -59,18 +60,23 @@ class FPMacro(Macro):
 
 #Class writes your Main processing loop
 class ProcMacro(Macro):
-    def __init__(self,zdab,defapply,procopts, *args, **kwargs):
+    def __init__(self,zdablist,defapply,procopts, *args, **kwargs):
         super(ProcMacro, self).__init__(*args, **kwargs)
-        self.zdabloc = zdpath + "/" + zdab
+        self.zdablist = zdablist
         self.defapply = defapply
         self.procopts = procopts
-        self.ntloc = prpath + "/" + zdab.rstrip(".zdab") + "_ntuple.root"
-        self.rootloc = prpath + "/" + zdab.rstrip(".zdab") + "_processed.root"
+
+        self.runnum = self.zdablist[0].replace("SNOP_",
+                "").replace(".zdab","").replace(".l2","").split("_")[0]
+        self.rootout = "DCMProcessed_"+self.runnum
+        self.ntloc = prpath + "/" + self.rootout + "_ntuple.root"
+        self.rootloc = prpath + "/" + self.rootout + ".root"
         self.write_main()
         
     def write_main(self):
-        #TODO: Load in particular zdab?
-        self.mac.write('/rat/inzdab/load {}\n'.format(self.zdabloc))
+        for zdab in self.zdablist:
+            zdab = zdpath + "/" + zdab
+            self.mac.write('/rat/inzdab/load {}\n'.format(zdab))
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")

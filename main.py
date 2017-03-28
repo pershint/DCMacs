@@ -103,7 +103,27 @@ def procCleanUp():
     for ajson in jsons:
         call(["mv",ajson,ljpath])
 
-def getzdabnames():
+
+def zdabsbyrun(zdablist):
+    '''
+    Takes a zdab list and groups the zdabs into arrays that have all
+    zdabs associated with a run in them.
+    '''
+    rundict = {}
+    for zdab in zdablist:
+        runinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
+        runinfo = runinfo.split("_")
+        while True:
+            try:
+                rundict[runinfo[0]].append(zdab)
+            except KeyError:
+                rundict[runinfo[0]] = []
+                continue
+            break
+    return rundict
+
+
+def getzdabdict():
     zdablist = []
     if zdabname and runrange:
         print("You must choose either one zdab or a run range, not both." + \
@@ -122,13 +142,13 @@ def getzdabnames():
         print("No file specified.  Getting all zdabs from the zdabpath and" + \
                 "trying to process them as requested.")
         zdabpaths = glob.glob(zdabpath + '/*.zdab')
-        print(zdabpaths)
         for zdab in zdabpaths:
             zdablist.append(zdab.replace(zdabpath + "/",""))
         if DEBUG:
             print("LIST OF ZDABS CHOSEN TO PROCESS: \n")
             print(zdablist)
-    return zdablist
+    rundict = zdabsbyrun(zdablist)
+    return rundict
 
 def rootstoclean():
     rootlist = []
@@ -191,14 +211,14 @@ def CleanRoots(rootlist):
                 del occmacro
 
 
-def ProcessZdabs(zdablist):
-    for zdabname in zdablist:
+def ProcessZdabs(zdabdict):
+    for run in zdabdict:
         if DEBUG:
-            print("BUILDING MACROS FOR ZDAB {}...".format(zdabname))
-        fp = m.FPMacro(zdabname,FIRSTPASS,c.MATERIAL)
+            print("BUILDING MACROS FOR ZDABS {}...".format(zdabdict[run]))
+        fp = m.FPMacro(zdabdict[run],FIRSTPASS,c.MATERIAL)
         fp.save()
 
-        proc = m.ProcMacro(zdabname,c.default_apply,procopts,PROCMAIN,c.MATERIAL)
+        proc = m.ProcMacro(zdabdict[run],c.default_apply,procopts,PROCMAIN,c.MATERIAL)
         processed_root = proc.get_procrootname()
         proc.save()
 
@@ -269,8 +289,8 @@ if __name__ == '__main__':
         rlist = rootstoclean()
         CleanRoots(rlist)
     else:
-        zdablist = getzdabnames()
-        ProcessZdabs(zdablist)
+        zdabdict = getzdabdict()
+        ProcessZdabs(zdabdict)
     if DEBUG:
         print("MOVING RATLOGS")
     ratlogs = glob.glob(basepath + 'rat*log')
