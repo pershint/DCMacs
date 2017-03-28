@@ -63,6 +63,7 @@ class ProcMacro(Macro):
         super(ProcMacro, self).__init__(*args, **kwargs)
         self.zdabloc = zdpath + "/" + zdab
         self.defapply = defapply
+        self.procopts = procopts
         self.ntloc = prpath + "/" + zdab.rstrip(".zdab") + "_ntuple.root"
         self.rootloc = prpath + "/" + zdab.rstrip(".zdab") + "_processed.root"
         self.write_main()
@@ -80,7 +81,7 @@ class ProcMacro(Macro):
         self.mac.write('/rat/procset mask "{}"\n'.format(self.defapply))
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
         self.mac.write("/rat/procset pass 2\n")
-        if procopts["fullprocess"]:
+        if self.procopts["fullprocess"]:
             self.mac.write("/rat/proc hitcleaning\n")
             self.mac.write('/rat/procset mask "default"\n')
             self.mac.write("/rat/proc dqrunproc\n")
@@ -108,7 +109,7 @@ class ProcMacro(Macro):
                         "Try again with your material selection in ./config.")
                 sys.exit(0)
             self.mac.write('/rat/proc/endif\n\n')
-        if procopts["ntuple"]:
+        if self.procopts["ntuple"]:
             self.mac.write('/rat/proc outntuple\n')
             self.mac.write('/rat/procset file "{}"\n'.format(self.ntloc))
         self.mac.write('/rat/proclast outroot\n')
@@ -126,9 +127,9 @@ class ProcMacro(Macro):
 #The event did not have any of the flags set) and a "dirty" root (events where
 #The event did have the data cleaning flags set).
 class DCMacro(Macro):
-    def __init__(self,procroot, analysis_flags,dcopts,*args, **kwargs):
+    def __init__(self,procroot, analysis_type,dcopts,*args, **kwargs):
         super(DCMacro, self).__init__(*args, **kwargs)
-        self.aflags = analysis_flags
+        self.aflags = analysis_type
         self.procroot = prpath + "/" + procroot
         self.dcroot = drpath + "/" + procroot
         self.getclean = dcopts["getclean"]
@@ -144,18 +145,31 @@ class DCMacro(Macro):
         #FIXME: Need these lines if DCing data processed on the grid
         self.mac.write("/rat/proc datacleaning\n")
         self.mac.write('/rat/procset mask "{}"\n'.format("default_apply"))
-        for mask in self.aflags:
-            self.mac.write("/rat/proc/if dataCleaningCut\n")
-            self.mac.write('/rat/procset flag "{}"\n'.format(mask))
-            if self.getclean:
-                self.mac.write('    /rat/proc outroot\n')
-                self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),mask))
-            if self.getdirty:
-                self.mac.write("/rat/proc/else\n")
-                self.mac.write('    /rat/proc outroot\n')
-                self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),mask))
-            self.mac.write("/rat/proc/endif\n")
-
+	for key in self.aflags:
+            if key == 'flag':
+                flagarr = self.aflags[key]
+		for flag in flagarr:
+		    self.mac.write("/rat/proc/if dataCleaningCut\n")
+		    self.mac.write('/rat/procset flag "{}"\n'.format(flag))
+		    if self.getclean:
+			self.mac.write('    /rat/proc outroot\n')
+			self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),flag))
+		    if self.getdirty:
+			self.mac.write("/rat/proc/else\n")
+			self.mac.write('    /rat/proc outroot\n')
+			self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),mask))
+		    self.mac.write("/rat/proc/endif\n")
+            if key == 'mask':
+	        self.mac.write("/rat/proc/if dataCleaningCut\n")
+	        self.mac.write('/rat/procset mask "{}"\n'.format(self.aflags[key]))
+	        if self.getclean:
+		    self.mac.write('    /rat/proc outroot\n')
+		    self.mac.write('    /rat/procset file "{0}_{1}_clean.root"\n'.format(self.dcroot.rstrip('.root'),self.aflags[key]))
+	        if self.getdirty:
+		    self.mac.write("/rat/proc/else\n")
+		    self.mac.write('    /rat/proc outroot\n')
+		    self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),self.aflags[key]))
+	        self.mac.write("/rat/proc/endif\n")
         self.mac.write("### END EVENT LOOP ###\n\n")
 
         self.mac.write("/rat/inroot/read\n\n")

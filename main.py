@@ -17,7 +17,12 @@ ljpath = os.path.abspath(os.path.join(logpath,"json"))
 prpath = m.prpath
 zdabpath = m.zdpath
 drpath = m.drpath
+
+#LOAD CONFIG
 RATSRC = c.RATSRC
+dcopts = {"getclean":c.getclean,"getdirty":c.getdirty}
+procopts = {"fullprocess":c.fullprocess, "ntuple":c.procntuple}
+#/LOAD CONFIG
 
 #PARSERUTILS
 parser = optparse.OptionParser()
@@ -52,6 +57,9 @@ parser.add_option("-O","--occupancy",action="store_true",dest="occupancy",
         default=False,
         help="Run the 'occupancy' configuration of the dcaproc after" + \
                 "each data cleaning macro is run")
+parser.add_option("-j","--jobnum",action="store",dest="jobnum",
+        default=0, help="Job number appended to macro names and bashscript" + \
+                "names")
 (options,args) = parser.parse_args()
 
 DEBUG = options.debug
@@ -62,18 +70,19 @@ cleanall = options.cleanall
 dcaproc = options.dcaproc
 occupancy = options.occupancy
 delproc=options.delproc
+jobnum=options.jobnum
 #/PARSERUTILS
 
 
 #FILENAMES
-FIRSTPASS = "firstpass.mac"
-PROCMAIN = "processing.mac"
-DCSPLIT = "CleanData.mac"  #Outputs two roots per flag mask; one clean, one dirty
-DCAPROC = "RunDCAProc.mac" #Outputs a root with various histograms describing DC
-OCCPROC = "RunOccProc.mac"
+FIRSTPASS = "firstpass_"+str(jobnum)+".mac"
+PROCMAIN = "processing_"+str(jobnum)+".mac"
+DCSPLIT = "CleanData_"+str(jobnum)+".mac"  #Outputs two roots per flag mask; one clean, one dirty
+DCAPROC = "RunDCAProc_"+str(jobnum)+".mac" #Outputs a root with various histograms describing DC
+OCCPROC = "RunOccProc_"+str(jobnum)+".mac"
 
-PROCBATCH_NAME = "ZDABProcessRunner.sh"
-DCBATCH_NAME = "DCRATRunner.sh"
+PROCBATCH_NAME = "ZDABProcessRunner_"+str(jobnum)+".sh"
+DCBATCH_NAME = "DCRATRunner_"+str(jobnum)+".sh"
 #/FILENAMES
 
 
@@ -140,7 +149,7 @@ def rootstoclean():
 
 def CleanRoots(rootlist):
     for rootfile in rootlist:
-        datacleaning = m.DCMacro(rootfile,c.analysis_flags,c.dcopts, \
+        datacleaning = m.DCMacro(rootfile,c.analysis_type,dcopts, \
                 DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
@@ -189,12 +198,12 @@ def ProcessZdabs(zdablist):
         fp = m.FPMacro(zdabname,FIRSTPASS,c.MATERIAL)
         fp.save()
 
-        proc = m.ProcMacro(zdabname,c.default_apply,c.procopts,PROCMAIN,c.MATERIAL)
+        proc = m.ProcMacro(zdabname,c.default_apply,procopts,PROCMAIN,c.MATERIAL)
         processed_root = proc.get_procrootname()
         proc.save()
 
-        datacleaning = m.DCMacro(processed_root,c.analysis_flags, \
-                c.dcopts,DCSPLIT,c.MATERIAL)
+        datacleaning = m.DCMacro(processed_root,c.analysis_type, \
+                dcopts,DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
         if dcaproc:

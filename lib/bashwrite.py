@@ -8,6 +8,7 @@ from subprocess import call
 
 basepath = os.path.dirname(__file__)
 bashpath = os.path.abspath(os.path.join(basepath, "..", "bashscripts"))
+homepath = os.path.abspath(os.path.join(basepath, ".."))
 macropath = m.macropath
 
 class BashScript(object):
@@ -21,6 +22,7 @@ class BashScript(object):
 
     def write(self):
         self.bashfile.write("source " + self.ratsource + "\n")
+        self.bashfile.write("cd " + homepath + "/\n")
         for macroname in self.macro_list:
             self.bashfile.write("rat " + macropath + "/" + macroname + "\n")
 
