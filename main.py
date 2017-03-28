@@ -2,6 +2,7 @@
 
 import sys
 import os.path
+import numpy as np
 import optparse
 from subprocess import call
 import lib.macwrite as m
@@ -35,9 +36,13 @@ parser.add_option("-z","--zdab",action="store",dest="zdabname",
         default=None,
         help="Input name of one particular zdab to process from ./zdabs")
 
-parser.add_option("-r","--runrange",action="store",dest="runrange",
+parser.add_option("-r","--run",action="store",dest="run",
         default=None,
-        help="Imput a run number range of zdabs to process from ./zdabs")
+        help="Input a run number to process zdabs in ./zdabs for that run")
+parser.add_option("-R","--runrange",action="store",dest="runrange",
+        default=None,
+        help="Input a run range to process zdabs in ./zdabs for each run in" + \
+                "range. Input as min-max (inclusive)")
 parser.add_option("-p","--procroot",action="store",dest="procroot",
         default=None,
         help="Give a name of a file in ./data/proc_roots to run ONLY" + \
@@ -63,8 +68,12 @@ parser.add_option("-j","--jobnum",action="store",dest="jobnum",
 (options,args) = parser.parse_args()
 
 DEBUG = options.debug
+
 zdabname = options.zdabname
-runrange = options.runrange
+run = options.run
+runrange = options.runrange.split("-")
+zdabopts = [run,runrange,zdabname]
+
 procroot = options.procroot
 cleanall = options.cleanall
 dcaproc = options.dcaproc
@@ -113,6 +122,14 @@ def zdabsbyrun(zdablist):
     for zdab in zdablist:
         runinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
         runinfo = runinfo.split("_")
+        if run:
+            rundict[runinfo[0]] = []
+            rundict[runinfo[0]].append(zdab)
+            break
+        if runrange:
+            zdabrange = np.arange(int(runrange[0]),int(runrange[1]),1)
+            if int(runinfo[0]) not in zdabrange:
+                continue
         while True:
             try:
                 rundict[runinfo[0]].append(zdab)
@@ -120,34 +137,33 @@ def zdabsbyrun(zdablist):
                 rundict[runinfo[0]] = []
                 continue
             break
+    if DEBUG:
+            print("PROCESSING ZDABS FOR THE FOLLOWING RUNS: \n")
+            print(rundict)
     return rundict
 
 
 def getzdabdict():
     zdablist = []
-    if zdabname and runrange:
-        print("You must choose either one zdab or a run range, not both." + \
+    if zdabopts.count(None) < (len(zdabopts)-1):
+        print("You must choose all zdabs, one zdab, one run, or a run range." + \
                 "Please try defining your options again.\n")
         sys.exit(0)
     if zdabname:
         zdablist.append(options.zdabname)
 	print("ZDAB CHOSEN TO PROCESS:" + str(zdablist))
-    elif runrange:
-        print("Not yet implemented.  Only YOU can implement this feature!")
-        sys.exit(0)
-        #FIXME: Use glob to get the desired filenames. example would be:
-        #zdabnames = glob.glob(zdabpath + '/SNOP_0000' + RUNNUM + '*.zdab')
-        #or something of the sort.
     else:
-        print("No file specified.  Getting all zdabs from the zdabpath and" + \
-                "trying to process them as requested.")
+        if runrange:
+            print("Getting zdabs from input run range")
+        else:
+            print("Getting all zdabs in ./zdabs to process")
         zdabpaths = glob.glob(zdabpath + '/*.zdab')
         for zdab in zdabpaths:
             zdablist.append(zdab.replace(zdabpath + "/",""))
-        if DEBUG:
-            print("LIST OF ZDABS CHOSEN TO PROCESS: \n")
-            print(zdablist)
     rundict = zdabsbyrun(zdablist)
+    if rundict == {}:
+        print("No zdabs met the specified run/name information.  Exiting")
+        sys.exit(0)
     return rundict
 
 def rootstoclean():
