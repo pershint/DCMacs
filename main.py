@@ -121,10 +121,13 @@ def zdabsbyrun(zdablist):
     rundict = {}
     for zdab in zdablist:
         fileinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
-        runnum = fileinfo.split("_")[0]
+        runnum = fileinfo.split("_")[0].lstrip("0")
+        if DEBUG:
+            print("GOT ZDAB WITH RUN NUMBER: " + str(runnum))
         if run:
-            rundict[fileinfo] = []
-            rundict[fileinfo].append(zdab)
+            if int(run) == int(runnum):
+                rundict[fileinfo] = []
+                rundict[fileinfo].append(zdab)
             break
         if RUNRANGE:
             runrange = RUNRANGE.split("-")
@@ -141,8 +144,12 @@ def zdabsbyrun(zdablist):
                 continue
             break
     if DEBUG:
-            print("PROCESSING ZDABS FOR THE FOLLOWING RUNS: \n")
-            print(rundict)
+        print("PROCESSING ZDABS FOR THE FOLLOWING RUNS: \n")
+        print(rundict)
+    if rundict == {}:
+        print("No run range or run exists in /zdabs that was requested." + \
+                "Try another run range.  Exiting")
+        sys.exit(0)
     return rundict
 
 
