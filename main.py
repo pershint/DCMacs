@@ -71,9 +71,8 @@ DEBUG = options.debug
 
 zdabname = options.zdabname
 run = options.run
-runrange = options.runrange
-zdabopts = [run,runrange,zdabname]
-
+RUNRANGE = options.runrange
+zdabopts = [run,RUNRANGE,zdabname]
 procroot = options.procroot
 cleanall = options.cleanall
 dcaproc = options.dcaproc
@@ -120,30 +119,36 @@ def zdabsbyrun(zdablist):
     '''
     rundict = {}
     for zdab in zdablist:
-        runinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
-        runinfo = runinfo.split("_")
+        fileinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
+        runnum = fileinfo.split("_")[0].lstrip("0")
+        if DEBUG:
+            print("GOT ZDAB WITH RUN NUMBER: " + str(runnum))
         if run:
-            if int(run) == int(runinfo):
-                rundict[runinfo[0]] = []
-                rundict[runinfo[0]].append(zdab)
-                break
-            else:
-                continue
-        if runrange:
-            runrange = runrange.split("-")
-            zdabrange = np.arange(int(runrange[0]),int(runrange[1]),1)
-            if int(runinfo[0]) not in zdabrange:
+            if int(run) == int(runnum):
+                rundict[fileinfo] = []
+                rundict[fileinfo].append(zdab)
+            break
+        if RUNRANGE:
+            runrange = RUNRANGE.split("-")
+            lowrun = int(runrange[0])
+            highrun = int(runrange[1])
+            zdabrange = np.arange(lowrun,highrun,1)
+            if int(runnum) not in zdabrange:
                 continue
         while True:
             try:
-                rundict[runinfo[0]].append(zdab)
+                rundict[fileinfo].append(zdab)
             except KeyError:
-                rundict[runinfo[0]] = []
+                rundict[fileinfo] = []
                 continue
             break
     if DEBUG:
-            print("PROCESSING ZDABS FOR THE FOLLOWING RUNS: \n")
-            print(rundict)
+        print("PROCESSING ZDABS FOR THE FOLLOWING RUNS: \n")
+        print(rundict)
+    if rundict == {}:
+        print("No run range or run exists in /zdabs that was requested." + \
+                "Try another run range.  Exiting")
+        sys.exit(0)
     return rundict
 
 
@@ -157,7 +162,7 @@ def getzdabdict():
         zdablist.append(options.zdabname)
 	print("ZDAB CHOSEN TO PROCESS:" + str(zdablist))
     else:
-        if runrange:
+        if RUNRANGE:
             print("Getting zdabs from input run range")
         else:
             print("Getting all zdabs in ./zdabs to process")
@@ -202,7 +207,7 @@ def CleanRoots(rootlist):
             occmacro.save()
 
         #Write your bashscript that runs the DC macros in order
-        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
+        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST,None)
         dcscript.save()
         #Run the script written using bash
         try:
@@ -232,13 +237,13 @@ def CleanRoots(rootlist):
 
 
 def ProcessZdabs(zdabdict):
-    for run in zdabdict:
+    for subrun in zdabdict:
         if DEBUG:
-            print("BUILDING MACROS FOR ZDABS {}...".format(zdabdict[run]))
-        fp = m.FPMacro(zdabdict[run],FIRSTPASS,c.MATERIAL)
+            print("BUILDING MACROS FOR ZDABS {}...".format(zdabdict[subrun]))
+        fp = m.FPMacro(zdabdict[subrun],FIRSTPASS,c.MATERIAL)
         fp.save()
 
-        proc = m.ProcMacro(zdabdict[run],c.default_apply,procopts,PROCMAIN,c.MATERIAL)
+        proc = m.ProcMacro(zdabdict[subrun],c.default_apply,procopts,PROCMAIN,c.MATERIAL)
         processed_root = proc.get_procrootname()
         proc.save()
 
@@ -257,10 +262,10 @@ def ProcessZdabs(zdabdict):
             print("MACROS WRITTEN AND SAVED.")
 
         #Write your bashscript that runs processing
-        procscript = b.BashScript(PROCBATCH_NAME,RATSRC,PROCMACRO_LIST)
+        procscript = b.BashScript(PROCBATCH_NAME,RATSRC,PROCMACRO_LIST,subrun)
         procscript.save()
         #Write your bashscript that runs data cleaning
-        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST)
+        dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST,subrun)
         dcscript.save()
         #Run the zdab -> ROOT processor
         try:

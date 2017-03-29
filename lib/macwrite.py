@@ -66,9 +66,9 @@ class ProcMacro(Macro):
         self.defapply = defapply
         self.procopts = procopts
 
-        self.runnum = self.zdablist[0].replace("SNOP_",
-                "").replace(".zdab","").replace(".l2","").split("_")[0]
-        self.rootout = "DCMProcessed_"+self.runnum
+        self.fileinfo= self.zdablist[0].replace("SNOP_",
+                "").replace(".zdab","").replace(".l2","")
+        self.rootout = "DCMProcessed_"+self.fileinfo
         self.ntloc = prpath + "/" + self.rootout + "_ntuple.root"
         self.rootloc = prpath + "/" + self.rootout + ".root"
         self.write_main()
