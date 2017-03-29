@@ -7,8 +7,8 @@ MATERIAL = "water"
 
 #Link this to your system's rat source
 basepath = os.path.dirname(__file__)
-ratpath = os.path.abspath(os.path.join(basepath,"..","..",".."))
-sourcetype = "env.sh"
+ratpath = os.path.abspath(os.path.join(basepath,"..","..","..",".."))
+sourcetype = "env_rat-dev.sh"
 RATSRC = ratpath + "/" + sourcetype
 
 #Toggles which mask should be used in 2nd pass processing (processing.mac).

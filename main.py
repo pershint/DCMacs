@@ -71,7 +71,7 @@ DEBUG = options.debug
 
 zdabname = options.zdabname
 run = options.run
-runrange = options.runrange.split("-")
+runrange = options.runrange
 zdabopts = [run,runrange,zdabname]
 
 procroot = options.procroot
@@ -123,10 +123,14 @@ def zdabsbyrun(zdablist):
         runinfo = zdab.replace("SNOP_","").replace(".zdab","").replace(".l2","")
         runinfo = runinfo.split("_")
         if run:
-            rundict[runinfo[0]] = []
-            rundict[runinfo[0]].append(zdab)
-            break
+            if int(run) == int(runinfo):
+                rundict[runinfo[0]] = []
+                rundict[runinfo[0]].append(zdab)
+                break
+            else:
+                continue
         if runrange:
+            runrange = runrange.split("-")
             zdabrange = np.arange(int(runrange[0]),int(runrange[1]),1)
             if int(runinfo[0]) not in zdabrange:
                 continue
