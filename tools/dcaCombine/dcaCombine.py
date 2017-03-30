@@ -62,6 +62,7 @@ def sumhists(hfilenames,histtitles):
                     print("Error getting histogram for " + title + \
                             "in file " + hfilename + ". Cancelling")
                     sys.exit(0)
+                hist.SetTitle(title)
                 sumhists.append(hist)
             continue
         else:
@@ -76,7 +77,7 @@ def sumhists(hfilenames,histtitles):
     return sumhists
 
 def writeHistsToTFile(histarr):
-    outfile = r.TFile("occProcHists_Combined.root","RECREATE")
+    outfile = r.TFile("oPH_Combined.root","RECREATE")
     for hist in histarr:
         outfile.Add(hist)
     #FIXME: Add a tree here that has all of the
@@ -84,6 +85,7 @@ def writeHistsToTFile(histarr):
     return outfile
 
 if __name__ == "__main__":
+    #rootfile = r.TFile("occProcHists_Combined.root","RECREATE")
     print(args.isdca)
     print(args.isocc)
     print("LET US BEGIN")
@@ -101,4 +103,5 @@ if __name__ == "__main__":
     sumhists[0].GetSum()
     sumhists[0].Draw()
     rootfile = writeHistsToTFile(sumhists)
-    rootfile.Save()
+    rootfile.Write()
+    rootfile.Close()
