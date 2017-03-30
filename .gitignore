@@ -20,4 +20,9 @@ bashscripts/*
 !bashscripts/.gitkeep
 outmacs/*
 !outmacs/.gitkeep
-
+tools/dcaCombine/dcas/*
+!tools/dcaCombine/dcas/.gitkeep
+tools/dcaCombine/occs/*
+!tools/dcaCombine/occs/.gitkeep
+tools/dcaCombine/output/*
+!tools/dcaCombine/output/.gitkeep
