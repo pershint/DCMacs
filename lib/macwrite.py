@@ -10,7 +10,7 @@ macropath = os.path.abspath(os.path.join(basepath, "..","outmacs"))
 zdpath = os.path.abspath(os.path.join(basepath, "..","data","zdabs"))
 prpath = os.path.abspath(os.path.join(basepath, "..","data","proc_roots"))
 drpath = os.path.abspath(os.path.join(basepath, "..","data","dc_roots"))
-
+dcarpath = os.path.abspath(os.path.join(basepath, "..","data","dcaocc"))
 
 #Base class for all macros.  Writes to ignore Muonic/Hadronic processes
 class Macro(object):
@@ -183,13 +183,14 @@ class DCMacro(Macro):
         self.mac.write("exit")
 
 
-
+#FIXME: DCAProcMacro assumes that your file is in proc_roots.  What about the
+#"clean" or "dirty" files output to dc_roots?
 class DCAProcMacro(Macro):
     def __init__(self,procroot, types, *args, **kwargs):
         super(DCAProcMacro, self).__init__(*args, **kwargs)
         self.types = types
         self.procroot = prpath + "/" + procroot
-        self.dcroot = drpath + "/" + procroot
+        self.dcaroot = dcarpath + "/" + procroot
         self.write_main()
         
     def write_main(self):
@@ -205,7 +206,7 @@ class DCAProcMacro(Macro):
         for onetype in self.types:
             self.mac.write('/rat/procset type "{}"\n'.format(onetype))
         self.mac.write('/rat/procset file "{}_dcaProcHists.root"\n'.format( \
-                self.dcroot.rstrip(".root")))
+                self.dcaroot.rstrip(".root")))
 
         self.mac.write("### END EVENT LOOP ###\n\n")
 
@@ -218,7 +219,7 @@ class OccProcMacro(Macro):
         super(OccProcMacro, self).__init__(*args, **kwargs)
         self.types = ["slot","crate","channel"]
         self.procroot = prpath + "/" + procroot
-        self.dcroot = drpath + "/" + procroot
+        self.dcaroot = dcarpath + "/" + procroot
         self.write_main()
         
     def write_main(self):
@@ -234,7 +235,7 @@ class OccProcMacro(Macro):
         for onetype in self.types:
             self.mac.write('/rat/procset type "{}"\n'.format(onetype))
         self.mac.write('/rat/procset file "{}_occProcHists.root"\n'.format( \
-                self.dcroot.rstrip(".root")))
+                self.dcaroot.rstrip(".root")))
 
         self.mac.write("### END EVENT LOOP ###\n\n")
 

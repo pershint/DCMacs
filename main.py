@@ -12,8 +12,8 @@ import glob
 
 basepath = os.path.dirname(__file__)
 homepath = os.path.abspath(os.path.join(basepath,""))
-logpath = os.path.abspath(os.path.join(basepath,"log"))
-rlpath = os.path.abspath(os.path.join(logpath,"ratlogs"))
+logpath = os.path.abspath(os.path.join(basepath,"data","runlogs"))
+miscratpath = os.path.abspath(os.path.join(logpath,"miscRATruns"))
 ljpath = os.path.abspath(os.path.join(logpath,"json"))
 prpath = m.prpath
 zdabpath = m.zdpath
@@ -57,11 +57,20 @@ parser.add_option("-D","--delproc",action="store_true",dest="delproc",
 		"clean and dirty DC rootfiles")
 parser.add_option("-a","--dcaproc",action="store_true",dest="dcaproc",
         default=False,
-        help="Also run dcaproc after each data cleaning macro is run")
+        help="Run dcaproc (runs on all outputs from zdab processing, or a" + \
+                 "single file fed in with the -u flag")
 parser.add_option("-O","--occupancy",action="store_true",dest="occupancy",
         default=False,
         help="Run the 'occupancy' configuration of the dcaproc after" + \
                 "each data cleaning macro is run")
+parser.add_option("-u","--dcaocc",action="store",dest="dcaocc",
+        default=None,
+        help="If the -a or -O flag is activated, only run the dcaProc on" + \
+		"the filename given located in /data/proc_roots")
+parser.add_option("-C","--actonclean",action="store_true",dest="actonclean",
+        default=False,
+        help="If the -a or -O flag is activated, only run the dcaProc on" + \
+		"files in /data/proc_roots with clean in the filename")
 parser.add_option("-j","--jobnum",action="store",dest="jobnum",
         default=0, help="Job number appended to macro names and bashscript" + \
                 "names")
@@ -79,6 +88,8 @@ dcaproc = options.dcaproc
 occupancy = options.occupancy
 delproc=options.delproc
 jobnum=options.jobnum
+aoc = options.actonclean
+dcaocc1 = options.dcaocc
 #/PARSERUTILS
 
 
@@ -91,25 +102,49 @@ OCCPROC = "RunOccProc_"+str(jobnum)+".mac"
 
 PROCBATCH_NAME = "ZDABProcessRunner_"+str(jobnum)+".sh"
 DCBATCH_NAME = "DCRATRunner_"+str(jobnum)+".sh"
+DCABATCH_NAME = "dcaOccProcRunner_"+str(jobnum)+".sh"
 #/FILENAMES
 
 
 #Order is important here!  See ./templates/order.txt for reference
 PROCMACRO_LIST = [FIRSTPASS, PROCMAIN]
 DCMACRO_LIST = [DCSPLIT]
+DCAMACRO_LIST = []
 if dcaproc:
-    DCMACRO_LIST.append(DCAPROC)
+    DCAMACRO_LIST.append(DCAPROC)
 if occupancy:
-    DCMACRO_LIST.append(OCCPROC)
+    DCAMACRO_LIST.append(OCCPROC)
 
 
-def procCleanUp():
+def DoDCA(rf,subrun):
     '''
-    Moves files resulting from processing a zdab to their proper directory.
-    ''' 
-    jsons = glob.glob(homepath + "/*.json")
-    for ajson in jsons:
-        call(["mv",ajson,ljpath])
+    Run the dcaProc or occproc on the input rootfile.
+    If subrun is none, RAT is run from the home path.  Otherwise,
+    ratlogs go to /data/runlogs/RUN_SUBRUN
+    '''
+    if dcaproc:
+        dcamacro = m.DCAProcMacro(rf,c.types,DCAPROC,c.MATERIAL)
+        dcamacro.save()
+    if occupancy:
+        occmacro = m.OccProcMacro(rf,OCCPROC,c.MATERIAL)
+        occmacro.save()
+    #Write your bashscript that runs the DC macros in order
+    dcascript = b.BashScript(DCABATCH_NAME,RATSRC,DCAMACRO_LIST,subrun)
+    dcascript.save()
+    #Run the script written using bash
+    try:
+        dcascript.run()
+    except:
+        print("something went wrong running your script.  noooooo")
+        raise
+    #if not in debug mode, do cleanup
+    if not DEBUG:
+        if dcaproc:
+	    dcamacro.delete()
+	    del dcamacro
+        if occupancy:
+	    occmacro.delete()
+	    del occmacro
 
 
 def zdabsbyrun(zdablist):
@@ -186,7 +221,7 @@ def rootstoclean():
             if pr.find("ntuple") == 1:
                 continue
             else:
-                rootlist.append(pr.replace(prpath + "/",""))
+                rootlist.append(pr)
         if DEBUG:
             print("LIST OF ROOTS GOING TO CLEANING: \n")
             print(rootlist)
@@ -198,14 +233,6 @@ def CleanRoots(rootlist):
                 DCSPLIT,c.MATERIAL)
         datacleaning.save()
 
-        if dcaproc:
-            dcamacro = m.DCAProcMacro(rootfile,c.types,DCAPROC,c.MATERIAL)
-            dcamacro.save()
-
-        if occupancy:
-            occmacro = m.OccProcMacro(rootfile,OCCPROC,c.MATERIAL)
-            occmacro.save()
-
         #Write your bashscript that runs the DC macros in order
         dcscript = b.BashScript(DCBATCH_NAME,RATSRC,DCMACRO_LIST,None)
         dcscript.save()
@@ -215,11 +242,6 @@ def CleanRoots(rootlist):
         except:
             print("something went wrong running your script.  noooooo")
             raise
-	if delproc:
-	    #Remove the processed root now that cleaning is complete
-            if DEBUG:
-                print("DELETING PROCESSED ROOT FILE.")
-            call(["rm",prpath + "/" + rootfile])
       
 
         #if not in debug mode, do cleanup
@@ -234,7 +256,16 @@ def CleanRoots(rootlist):
             if occupancy:
                 occmacro.delete()
                 del occmacro
-
+        
+        #Generate dca/occ macros and run if input
+        if occproc or occupancy:
+            DoDCA(rootfile,None)
+        #Remove processed root if was requested in flags
+	if delproc:
+	    #Remove the processed root now that cleaning is complete
+            if DEBUG:
+                print("DELETING PROCESSED ROOT FILE.")
+            call(["rm",prpath + "/" + rootfile])
 
 def ProcessZdabs(zdabdict):
     for subrun in zdabdict:
@@ -250,16 +281,8 @@ def ProcessZdabs(zdabdict):
         datacleaning = m.DCMacro(processed_root,c.analysis_type, \
                 dcopts,DCSPLIT,c.MATERIAL)
         datacleaning.save()
-
-        if dcaproc:
-            dcamacro = m.DCAProcMacro(processed_root,c.types,DCAPROC,c.MATERIAL)
-            dcamacro.save()
-        if occupancy:
-            occmacro = m.OccProcMacro(processed_root,OCCPROC,c.MATERIAL)
-            occmacro.save()
-
         if DEBUG:
-            print("MACROS WRITTEN AND SAVED.")
+            print("ZDAB PROCESSING AND DATACLEANING MACROS WRITTEN AND SAVED.")
 
         #Write your bashscript that runs processing
         procscript = b.BashScript(PROCBATCH_NAME,RATSRC,PROCMACRO_LIST,subrun)
@@ -273,8 +296,6 @@ def ProcessZdabs(zdabdict):
         except:
             print("something went wrong processing your zdabs.  noooooo")
             raise
-        #Move files produced during processing
-        procCleanUp()
 
         #Run your Data Cleaning Scripts
         try:
@@ -308,9 +329,31 @@ def ProcessZdabs(zdabdict):
                 occmacro.delete()
                 del occmacro
 
+        #Generate macros & run for dcaProcs
+        if occupancy or dcaproc:
+            DoDCA(processed_root,subrun)
+	if delproc:
+            if DEBUG:
+                print("REMOVING PROCESSED ROOT FILE.")
+	    #Remove the processed root now that cleaning is complete
+            call(["rm",prpath + "/" + processed_root])
 
 if __name__ == '__main__':
-    if procroot or cleanall:
+    if dcaocc1:
+        rf = dcaocc1
+        DoDCA(rf,None)
+    elif aoc:
+        cleanfiles = glob.glob(prpath + "/*clean*.root")
+        rootlist = []
+        for cf in cleanfiles:
+            cname = cf.replace(prpath + "/","")
+            if cname.find("ntuple") == 1:
+                continue
+            else:
+                rootlist.append(cname)
+        for rf in rootlist:
+            DoDCA(rf,None)
+    elif procroot or cleanall:
         rlist = rootstoclean()
         CleanRoots(rlist)
     else:
@@ -320,6 +363,6 @@ if __name__ == '__main__':
         print("MOVING RATLOGS")
     ratlogs = glob.glob(basepath + 'rat*log')
     for ratlog in ratlogs:
-        call(["mv",ratlog,rlpath])
+        call(["mv",ratlog,miscratpath])
 
 
