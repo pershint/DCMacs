@@ -14,6 +14,8 @@ data/zdabs/*
 data/proc_roots/*
 data/dc_roots/*
 !data/dc_roots/.gitkeep
+data/dcaocc/*
+!data/dcaocc/.gitkeep
 data/runlogs/*
 !data/runlogs/.gitkeep
 bashscripts/*
