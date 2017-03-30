@@ -26,7 +26,7 @@ class BashScript(object):
         self.bashfile.write("source " + self.ratsource + "\n")
         if self.runinfo:
             runpath = runlogpath + "/" + self.runinfo
-            self.bashfile.write("mkdir " + runpath + "\n")
+            self.bashfile.write("mkdir -p " + runpath + "\n")
             self.bashfile.write("cd " + runpath + "\n")
         else:
             self.bashfile.write("cd " + mainpath + "\n")
