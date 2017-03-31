@@ -338,21 +338,27 @@ def ProcessZdabs(zdabdict):
 	    #Remove the processed root now that cleaning is complete
             call(["rm",prpath + "/" + processed_root])
 
+#Runs the dcaProc on all "clean" files in /data/proc_root
+#FIXME:Have this function run the clean files in /data/dc_roots
+def dcaonclean():
+    cleanfiles = glob.glob(prpath + "/*clean*.root")
+    rootlist = []
+    for cf in cleanfiles:
+        cname = cf.replace(prpath + "/","")
+        if cname.find("ntuple") == 1:
+	    continue
+        else:
+	    rootlist.append(cname)
+    for rf in rootlist:
+        DoDCA(rf,None)
+
+
 if __name__ == '__main__':
     if dcaocc1:
         rf = dcaocc1
         DoDCA(rf,None)
     elif aoc:
-        cleanfiles = glob.glob(prpath + "/*clean*.root")
-        rootlist = []
-        for cf in cleanfiles:
-            cname = cf.replace(prpath + "/","")
-            if cname.find("ntuple") == 1:
-                continue
-            else:
-                rootlist.append(cname)
-        for rf in rootlist:
-            DoDCA(rf,None)
+        dcaonclean()
     elif procroot or cleanall:
         rlist = rootstoclean()
         CleanRoots(rlist)
