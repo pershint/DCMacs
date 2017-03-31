@@ -25,6 +25,27 @@ crates = list(np.arange(0,19,1))
 crates.append("All")
 nhittypes = {"Nhit": [10,20,40,60]}
 occtypes = {"Crate": crates,"Angle":["Cos_Theta","Phi"],"%Angle":["Cos","Phi"]}
+dcaflags = ["prescalecut","zerozerocut","crateisotropy","ftscut",
+        "flashergeocut","itctimespreadcut","junkcut","muontag","neckcut",
+        "owlcut","qcluster","qvnhit","qvt","ringoffire","tpmuonfollowercut-short",
+        "tpmuonfollowercut-long","waterblindlow","waterblindhigh"]
+dcatypes = ["nhit","time"]
+blindnums = np.arange(0,10,1)
+
+def getDcaHistNames():
+    histnames = []
+    for t in dcatypes:
+        for flag in dcaflags:
+            if flag.find("waterblind") != -1:
+                for num in blindnums:
+                    flagwnum = flag + str(num)
+                    hname = flagwnum + "_" + t
+                    histnames.append(hname)
+                continue
+            else:
+                hname = flag + "_" + t
+                histnames.append(hname)
+    return histnames
 
 def getOccHistNames():
     histnames = []
@@ -76,8 +97,8 @@ def sumhists(hfilenames,histtitles):
                     sys.exit(0)
     return sumhists
 
-def writeHistsToTFile(histarr):
-    outfile = r.TFile("oPH_Combined.root","RECREATE")
+def writeHistsToTFile(histarr,roottitle):
+    outfile = r.TFile(roottitle,"RECREATE")
     for hist in histarr:
         outfile.Add(hist)
     #FIXME: Add a tree here that has all of the
@@ -91,17 +112,20 @@ if __name__ == "__main__":
     print("LET US BEGIN")
     if args.isdca:
         histfiles = glob.glob(dcapath + "/*dcaProc*")
+        output=getDcaHistNames()
+        roottitle = "dPH_Combined.root"
     if args.isocc:
         histfiles = glob.glob(occpath + "/*occProc*")
-        #Build histsums using first occ
+        output=getOccHistNames()
+        roottitle = "dPH_Combined.root"
+       #Build histsums using first occ
     print("FILES THAT WILL BE COMBINED: " + str(histfiles))
-    output=getOccHistNames()
     print("SUMMING HISTOGRAMS FOR RUNS NOW...")
     sumhists = sumhists(histfiles,output)
     #FIXME: Make a function that changes all of the titles!
     #Could use GetSum() to add # entries for each histogram in
     sumhists[0].GetSum()
     sumhists[0].Draw()
-    rootfile = writeHistsToTFile(sumhists)
+    rootfile = writeHistsToTFile(sumhists,roottitle)
     rootfile.Write()
     rootfile.Close()
