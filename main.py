@@ -186,14 +186,14 @@ def zdabsbyrun(zdablist):
         sys.exit(0)
     return rundict
 
-
+#Return a dictionary of zdabs from ./data/zdab/
 def getzdabdict():
     zdablist = []
     if zdabopts.count(None) < (len(zdabopts)-1):
         print("You must choose all zdabs, one zdab, one run, or a run range." + \
                 "Please try defining your options again.\n")
         sys.exit(0)
-    if zdabname:
+    if zdabname: #Only get one zdab
         zdablist.append(options.zdabname)
 	print("ZDAB CHOSEN TO PROCESS:" + str(zdablist))
     else:
@@ -204,12 +204,13 @@ def getzdabdict():
         zdabpaths = glob.glob(zdabpath + '/*.zdab')
         for zdab in zdabpaths:
             zdablist.append(zdab.replace(zdabpath + "/",""))
-    rundict = zdabsbyrun(zdablist)
+    rundict = zdabsbyrun(zdablist) #Get only the runs in your run range
     if rundict == {}:
         print("No zdabs met the specified run/name information.  Exiting")
         sys.exit(0)
     return rundict
 
+#Returns a list of root files from ./data/proc_roots to run data cleaning on
 def rootstoclean():
     rootlist = []
     if procroot:
@@ -227,6 +228,8 @@ def rootstoclean():
             print(rootlist)
     return rootlist
 
+#Given a list of rootfiles, write out the data cleaning scripts to
+#Split the files to clean and dirty subfiles, then runs the macs
 def CleanRoots(rootlist):
     for rootfile in rootlist:
         datacleaning = m.DCMacro(rootfile,c.analysis_type,dcopts, \
@@ -267,6 +270,7 @@ def CleanRoots(rootlist):
                 print("DELETING PROCESSED ROOT FILE.")
             call(["rm",prpath + "/" + rootfile])
 
+#FIXME:The processing macros are not the same as on the grid right now
 def ProcessZdabs(zdabdict):
     for subrun in zdabdict:
         if DEBUG:

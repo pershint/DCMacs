@@ -7,8 +7,8 @@ MATERIAL = "water"
 
 #Link this to your system's rat source
 basepath = os.path.dirname(__file__)
-ratpath = os.path.abspath(os.path.join(basepath,"..","..","..",".."))
-sourcetype = "env_rat-dev.sh"
+ratpath = os.path.abspath(os.path.join(basepath,"..","..",".."))
+sourcetype = "env.sh"
 RATSRC = ratpath + "/" + sourcetype
 
 #Toggles which mask should be used in 2nd pass processing (processing.mac).
@@ -17,7 +17,8 @@ RATSRC = ratpath + "/" + sourcetype
 default_apply = "default_apply"
 
 #Analysis mask used to actually split the data with CleanData.mac.
-#See README for more info. on usage. 
+#If an event in the infed processed root files has any of the flags in
+#The analysis_type defined, it is saved to the "dirty" ROOT file.
 #analysis_type = {"flag":["muontag","neckcut"]}
 analysis_type = {"mask":"analysis_mask"}
 
