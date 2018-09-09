@@ -9,7 +9,7 @@ basepath = os.path.dirname(__file__)
 macropath = os.path.abspath(os.path.join(basepath, "..","outmacs"))
 zdpath = os.path.abspath(os.path.join(basepath, "..","data","zdabs"))
 prpath = os.path.abspath(os.path.join(basepath, "..","data","proc_roots"))
-drpath = os.path.abspath(os.path.join(basepath, "..","data","dc_roots"))
+drpath = os.path.abspath(os.path.join(basepath, "..","data","datacleaned_roots"))
 dcarpath = os.path.abspath(os.path.join(basepath, "..","data","dcaocc"))
 
 #Base class for all macros.  Writes to ignore Muonic/Hadronic processes
@@ -23,8 +23,7 @@ class Macro(object):
 
     def write_init(self):
         self.mac.write("#Start of file\n")
-        self.mac.write("/rat/physics_list/OmitMuonicProcesses true\n")
-        self.mac.write("/rat/physics_list/OmitHadronicProcesses true\n")
+        self.mac.write("/rat/physics_list/OmitAll true\n")
         self.mac.write("\n")
 
 
@@ -37,6 +36,11 @@ class Macro(object):
 
 #Class writes your first pass data cleaning macro for a list of zdabs associated with one run
 class FPMacro(Macro):
+    '''Class takes in a list of zdabs and writes the first pass of data
+    cleaning on all zdabs in the list.  The first pass does not output
+    any new files; only writes RATDB tables needed for the second pass
+    processing of livetime cuts.'''
+
     def __init__(self,zdablist, *args, **kwargs):
         super(FPMacro, self).__init__(*args, **kwargs)
         self.zdablist = zdablist
@@ -53,26 +57,45 @@ class FPMacro(Macro):
         self.mac.write("### EVENT LOOP ###\n")
         self.mac.write("/rat/proc datacleaning\n")
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
+        self.mac.write('/rat/procset add "missedmuonfollower"\n')
+        self.mac.write('/rat/procset add "pedcut"\n')
+        self.mac.write('/rat/procset add "atmospheric"\n')
         self.mac.write("/rat/procset pass 1\n")
         self.mac.write("### END EVENT LOOP ###\n")
         self.mac.write("/rat/inzdab/read\n")
         self.mac.write("exit")
 
-#Class writes your Main processing loop
-class ProcMacro(Macro):
-    def __init__(self,zdablist,defapply,procopts, *args, **kwargs):
-        super(ProcMacro, self).__init__(*args, **kwargs)
+class SPMacro(Macro):
+    def __init__(self,zdablist, *args, **kwargs):
+        '''Class takes in a list of zdabs and writes the second
+        pass of data cleaning macro.  Data cleaning is run on all
+        events in the subfiles and output to a single ratds or
+        ntuple.'''
+
+        super(SPMacro, self).__init__(*args, **kwargs)
         self.zdablist = zdablist
-        self.defapply = defapply
-        self.procopts = procopts
+        outroot_list = []
+        self.write_main()
+        self.save()
 
         self.fileinfo= self.zdablist[0].replace("SNOP_",
                 "").replace(".zdab","").replace(".l2","")
         self.rootout = "DCMProcessed_"+self.fileinfo
         self.ntloc = prpath + "/" + self.rootout + "_ntuple.root"
         self.rootloc = prpath + "/" + self.rootout + ".root"
-        self.write_main()
-        
+        self.out_type = "ntuple"
+
+    def setOutputType(self,outtype):
+        '''specify if you want the ntuple output or full ratds output
+        after the second pass processing (I.E. data cleaning completion)'''
+        self.out_type = outtype
+    
+    def get_procrootname(self):
+        if self.out_type == "ratds":
+            return self.rootloc.replace(prpath + "/","")
+        elif self.out_type == "ntuple":
+            return self.ntloc.replace(prpath + "/","")
+
     def write_main(self):
         for zdab in self.zdablist:
             zdab = zdpath + "/" + zdab
@@ -80,54 +103,30 @@ class ProcMacro(Macro):
         self.mac.write('/rat/db/set DETECTOR geo_file "geo/snoplus_{}.geo"\n'.format(self.material))
         self.mac.write('\n')
         self.mac.write("/run/initialize\n\n")
-
         self.mac.write("### EVENT LOOP ###\n")
+
         self.mac.write("/rat/proc calibratePMT\n")
+        self.mac.write("/rat/proc triggerEfficiency\n")
+        self.mac.write("/rat/proc reconstructClocks\n")
         self.mac.write("/rat/proc datacleaning\n")
-        self.mac.write('/rat/procset mask "{}"\n'.format(self.defapply))
+        self.mac.write('/rat/procset mask "default_apply"\n')
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
+        self.mac.write('/rat/procset add "missedmuonfollower"\n')
+        self.mac.write('/rat/procset add "pedcut"\n')
+        self.mac.write('/rat/procset add "atmospheric"\n')
         self.mac.write("/rat/procset pass 2\n")
-        if self.procopts["fullprocess"]:
-            self.mac.write("/rat/proc hitcleaning\n")
-            self.mac.write('/rat/procset mask "default"\n')
-            self.mac.write("/rat/proc dqrunproc\n")
-            self.mac.write("/rat/proc dqpmtproc\n")
-            self.mac.write("/rat/proc dqtimeproc\n")
-            self.mac.write("/rat/proc dqtriggerproc\n")
-            self.mac.write("/rat/proc chanSWStatusCalib\n\n")
+        if self.out_type == "ratds":
+            self.mac.write('/rat/proclast outroot\n')
+        elif self.out_type == "ntuple":
+            self.mac.write('/rat/proclast outntuple\n')
+        else:
+            print("OUTPUT FORMAT SPECIFIED NOT SUPPORTED IN RAT. Choose"+\
+                    "either 'ratds' or 'ntuple' with self.setOutputType")
+            sys.exit(1)
 
-            self.mac.write("# Conditional logic for construction (exclude specific" + \
-                    "trigger types\n")
-            self.mac.write("/rat/proc/if trigTypeSelector\n")
-            self.mac.write('    /rat/procset trigType "PulseGT"\n')
-            self.mac.write('    /rat/procset trigType "EXTASY"\n')
-            self.mac.write('    /rat/procset trigType "Pedestal"\n')
-            self.mac.write("/rat/proc/else\n")
-            if self.material == "water":
-                #FIXME: changed to waterFitter once it has been pushed to RAT
-                self.mac.write('    /rat/proc partialWaterFitter\n')
-            elif self.material == "partial":
-                self.mac.write('    /rat/proc partialWaterFitter\n')
-            elif self.material == "scintillator":
-                self.mac.write('    /rat/proc scintFitter\n')
-            else:
-                print("Invalid material selected (OR TeDiol not implemented here.)" + \
-                        "Try again with your material selection in ./config.")
-                sys.exit(0)
-            self.mac.write('/rat/proc/endif\n\n')
-        if self.procopts["ntuple"]:
-            self.mac.write('/rat/proc outntuple\n')
-            self.mac.write('/rat/procset file "{}"\n'.format(self.ntloc))
-        self.mac.write('/rat/proclast outroot\n')
-        self.mac.write('/rat/procset file "{}"\n'.format(self.rootloc))
-        self.mac.write("### END EVENT LOOP ###\n\n")
-
+        self.mac.write("### END EVENT LOOP ###\n")
         self.mac.write("/rat/inzdab/read\n")
         self.mac.write("exit")
-
-    def get_procrootname(self):
-        return self.rootloc.replace(prpath + "/","")
-    
 
 #Class takes in the desired masks and outputs both a "cleaned" root (events where
 #The event did not have any of the flags set) and a "dirty" root (events where
@@ -163,7 +162,7 @@ class DCMacro(Macro):
 		    if self.getdirty:
 			self.mac.write("/rat/proc/else\n")
 			self.mac.write('    /rat/proc outroot\n')
-			self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),mask))
+			self.mac.write('    /rat/procset file "{0}_{1}_dirty.root"\n'.format(self.dcroot.rstrip('.root'),flag))
 		    self.mac.write("/rat/proc/endif\n")
             if key == 'mask':
 	        self.mac.write("/rat/proc/if dataCleaningCut\n")
