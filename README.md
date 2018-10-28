@@ -1,7 +1,46 @@
 #Scripts written by: Teal Pershing
-#March 13th, 2017
+#Last updated: October 28th, 2018
 
 Usage help: $python main.py --help
+
+
+#QUICK START
+
+Let's say you want to run data cleaning on some zdabs you have, and split them
+into "dirty" and "clean" datasets.  Do the following.
+
+i) Move all of the zdabs of interest to the directory ./data/zdabs .
+
+ii) open ./config/config.py . Set your configurables as desired; each is
+commented with a description, so read them to see what you can toggle.
+
+
+ii) To process all zdabs and apply data cleaning for a run range of interest (let's say 200000 to 2000010), do:
+
+$ python main.py -R 200000-200010
+
+Each run will be processed, and saved into a file in ./data/proc_roots.
+
+iii) If you want to split all the files in ./data/proc_roots 
+into dirty and clean files based on the
+analysis\_type specified in ./config/config.py, do:
+
+$ python main.py -P
+
+Each run will be scanned over and saved into a \_dirty.root and a \_clean.root in
+./data/datacleaned_roots
+
+iv) If you want to run the dcaProc on the file MyFileToProcess.root located
+ in ./data/proc_roots, do
+
+$ python --dcaproc -u MyFileToProcess.root
+
+If you want to run the occProc, similarly do
+
+$ python --occproc -u MyFileToProcess.root
+
+
+
 
 These python scripts take raw zdabs from SNO+, process the data as done on the
 SNO+ grid, and then split events based on the data cleaning mask chosen in 

@@ -29,7 +29,7 @@ types = ["timediff","flagged"]
 
 #Toggles if you want to save the "clean"/"dirty" roots after data cleaning
 getclean = True
-getdirty = False
+getdirty = True
 
 #Set the output type you want for the data cleaned files 
 output_type = "ntuple"    #ntuple or ratds
