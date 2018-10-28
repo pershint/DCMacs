@@ -37,9 +37,8 @@ class Macro(object):
 #Class writes your first pass data cleaning macro for a list of zdabs associated with one run
 class FPMacro(Macro):
     '''Class takes in a list of zdabs and writes the first pass of data
-    cleaning on all zdabs in the list.  The first pass does not output
-    any new files; only writes RATDB tables needed for the second pass
-    processing of livetime cuts.'''
+    cleaning on all zdabs in the list.  This pass is used to generate
+    the livetime/datacleaning tables, and these are sent to the RATDB. '''
 
     def __init__(self,zdablist, *args, **kwargs):
         super(FPMacro, self).__init__(*args, **kwargs)
@@ -59,6 +58,7 @@ class FPMacro(Macro):
         self.mac.write('/rat/procset add "tpmuonfollowercut"\n')
         self.mac.write('/rat/procset add "missedmuonfollower"\n')
         self.mac.write('/rat/procset add "pedcut"\n')
+        self.mac.write('/rat/procset add "livetimecuts"\n')
         self.mac.write('/rat/procset add "atmospheric"\n')
         self.mac.write("/rat/procset pass 1\n")
         self.mac.write("### END EVENT LOOP ###\n")
@@ -66,7 +66,7 @@ class FPMacro(Macro):
         self.mac.write("exit")
 
 class SPMacro(Macro):
-    def __init__(self,zdablist, *args, **kwargs):
+    def __init__(self,zdablist,procopts,apply_mask,*args, **kwargs):
         '''Class takes in a list of zdabs and writes the second
         pass of data cleaning macro.  Data cleaning is run on all
         events in the subfiles and output to a single ratds or
@@ -75,20 +75,26 @@ class SPMacro(Macro):
         super(SPMacro, self).__init__(*args, **kwargs)
         self.zdablist = zdablist
         outroot_list = []
-        self.write_main()
-        self.save()
 
         self.fileinfo= self.zdablist[0].replace("SNOP_",
                 "").replace(".zdab","").replace(".l2","")
         self.rootout = "DCMProcessed_"+self.fileinfo
         self.ntloc = prpath + "/" + self.rootout + "_ntuple.root"
         self.rootloc = prpath + "/" + self.rootout + ".root"
-        self.out_type = "ntuple"
+        self.out_type = procopts["output_type"]
+
+        self.write_main()
+        self.save()
 
     def setOutputType(self,outtype):
         '''specify if you want the ntuple output or full ratds output
         after the second pass processing (I.E. data cleaning completion)'''
-        self.out_type = outtype
+        if outtype == "ntuple" or outtype == "ratds":
+            self.out_type = outtype
+        else:
+            print("You must select either ntuple or ratds. Setting to ")
+            print("ntuple by default")
+            self.out_type = "ntuple"
     
     def get_procrootname(self):
         if self.out_type == "ratds":

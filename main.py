@@ -14,6 +14,7 @@ import lib.argparser as p
 basepath = os.path.dirname(__file__)
 homepath = os.path.abspath(os.path.join(basepath,""))
 logpath = os.path.abspath(os.path.join(basepath,"data","runlogs"))
+brpath = os.path.abspath(os.path.join(basepath,"bashscripts"))
 miscratpath = os.path.abspath(os.path.join(logpath,"miscRATruns"))
 ljpath = os.path.abspath(os.path.join(logpath,"json"))
 prpath = m.prpath
@@ -23,12 +24,14 @@ drpath = m.drpath
 #LOAD CONFIG
 RATSRC = c.RATSRC
 dcopts = {"getclean":c.getclean,"getdirty":c.getdirty}
-procopts = {"fullprocess":c.fullprocess, "ntuple":c.procntuple}
+procopts = {"output_type":c.output_type}
+apply_mask = c.apply_mask
 #/LOAD CONFIG
 
-
+DEBUG = p.DEBUG
 zdabname = p.zdabname
 run = p.run
+generate_tables = p.generate_tables
 RUNRANGE = p.runrange
 zdabopts = [run,RUNRANGE,zdabname]
 procroot = p.procroot
@@ -80,8 +83,8 @@ def DoDCA(rf,subrun):
         occmacro.save()
     #Write your bashscript that runs the DC macros in order
     dcascript = b.BashScript(RATSRC,macro_list=DCAMACRO_LIST,runinfo=subrun,slurmjob=ISSLURM)
-    dcascript.ScriptName(DCABATCH_NAME)
-    dcascript.Set_ScriptPath(brpath)
+    dcascript.SetScriptName(DCABATCH_NAME)
+    dcascript.SetScriptPath(brpath)
     dcascript.write()
     dcascript.save()
     #Run the script written using bash
@@ -190,9 +193,9 @@ def CleanRoots(rootlist):
         datacleaning.save()
 
         #Write your bashscript that runs the DC macros in order
-        dcscript = b.BashScript(RATSRC,macro_list=DCMACRO_LIST,None,slurmjob=ISSLURM)
-        dcscript.ScriptName(DCBATCH_NAME)
-        dcscript.Set_ScriptPath(brpath)
+        dcscript = b.BashScript(RATSRC,macro_list=DCMACRO_LIST,runinfo=None,slurmjob=ISSLURM)
+        dcscript.SetScriptName(DCBATCH_NAME)
+        dcscript.SetScriptPath(brpath)
         dcscript.write()
         dcscript.save()
         #Run the script written using bash
@@ -231,13 +234,14 @@ def ProcessZdabs(zdabdict,outtype="ntuple"):
     for subrun in zdabdict:
         if DEBUG:
             print("BUILDING MACROS FOR ZDABS {}...".format(zdabdict[subrun]))
-        fp = m.FPMacro(zdabdict[subrun],FIRSTPASS,c.MATERIAL)
-        fp.save()
+        if generate_tables:
+            fp = m.FPMacro(zdabdict[subrun],FIRSTPASS,c.MATERIAL)
+            fp.save()
 
-        sp = m.SPMacro(zdabdict[subrun],c.default_apply,procopts,PROCMAIN,c.MATERIAL)
+        sp = m.SPMacro(zdabdict[subrun],procopts,apply_mask,PROCMAIN,c.MATERIAL)
         sp.setOutputType(outtype)
-        processed_root = proc.get_procrootname()
-        proc.save()
+        processed_root = sp.get_procrootname()
+        sp.save()
 
         datacleaning = m.DCMacro(processed_root,c.analysis_type, \
                 dcopts,DCSPLIT,c.MATERIAL)
@@ -247,14 +251,14 @@ def ProcessZdabs(zdabdict,outtype="ntuple"):
 
         #Write your bashscript that runs processing
         procscript = b.BashScript(RATSRC,macro_list=PROCMACRO_LIST,runinfo=subrun,slurmjob=ISSLURM)
-        procscript.ScriptName(PROCBATCH_NAME)
-        procscript.Set_ScriptPath(brpath)
+        procscript.SetScriptName(PROCBATCH_NAME)
+        procscript.SetScriptPath(brpath)
         procscript.write()
         procscript.save()
         #Write your bashscript that runs data cleaning
         dcscript = b.BashScript(RATSRC,macro_list=DCMACRO_LIST,runinfo=subrun,slurmjob=ISSLURM)
-        dcscript.ScriptName(DCBATCH_NAME)
-        dcscript.Set_ScriptPath(brpath)
+        dcscript.SetScriptName(DCBATCH_NAME)
+        dcscript.SetScriptPath(brpath)
         dcscript.write()
         dcscript.save()
         #Run the zdab -> ROOT processor

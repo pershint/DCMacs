@@ -7,7 +7,10 @@ parser = argparse.ArgumentParser(description="Parser for Data Cleaning "+\
 parser.add_argument("-d","--debug",action="store_true",dest="debug",
         default=False,
         help="Turn on debug mode")
-
+parser.add_argument("-g","--generate_tables",action="store_true",dest="generate_tables",
+        default=False,
+        help="If this flag is given, the first pass of data cleaning (which "+\
+                "generates the RATDB data cleaning tables) will be run.")
 parser.add_argument("-z","--zdab",action="store",dest="zdabname",
         default=None,
         help="Input name of one particular zdab to process from ./zdabs")
@@ -58,17 +61,18 @@ args = parser.parse_args()
 
 DEBUG = args.debug
 
+generate_tables = args.generate_tables
 zdabname = args.zdabname
 run = args.run
-RUNRANGE = args.runrange
+runrange = args.runrange
 procroot = args.procroot
 cleanall = args.cleanall
 dcaproc = args.dcaproc
 occupancy = args.occupancy
 delproc=args.delproc
 jobnum=args.jobnum
-aoc = args.actonclean
-dcaocc1 = args.dcaocc
+actonclean = args.actonclean
+dcaocc = args.dcaocc
 isslurm = args.isslurm
 #/PARSERUTILS
 

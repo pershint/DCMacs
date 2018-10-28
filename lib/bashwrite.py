@@ -18,22 +18,28 @@ class BashScript(object):
 	self.ratsource = ratsource
         self.macro_list = macro_list
         self.runinfo = runinfo #Format RUNNUM_SUBNUM
-        self.bashloc = None 
+        self.bashdir = None
+        self.is_slurm = slurmjob
 
-    def Set_RunInfo(self,runinfo):
+    def SetScriptName(self,name):
+        '''Set the name of the bash script generates'''
+        self.name = name
+
+    def SetRunInfo(self,runinfo):
         '''Sets the subrun info for logging each subrun's processing'''
         self.runinfo = runinfo
 
-    def Set_ScriptPath(self,loc):
+    def SetScriptPath(self,loc):
         '''Sets the path and filename for saving the bash script at.'''
-        self.bashloc = loc 
+        self.bashdir = loc 
 
     def write(self):
-        if self.bashloc is None:
+        if self.bashdir is None:
             print("You must specify a location to write the script to!")
             sys.exit(0)
-        self.bashfile = open(self.bashloc,"w")
-        if slurmjob:
+        print("BASH SCRIPT OPENING AT: " + str("%s/%s"%(self.bashdir,self.name)))
+        self.bashfile = open("%s/%s"%(self.bashdir,self.name),"w")
+        if self.is_slurm:
             print("Slurm header implementation not yet supported.  Soooon")
         self.bashfile.write("source " + self.ratsource + "\n")
         if self.runinfo:
@@ -49,12 +55,12 @@ class BashScript(object):
         self.bashfile.close()
 
     def run(self):
-        if slurmjob:
+        if self.is_slurm:
             print("call command for submitting to slurm not implemented yet.")
             sys.exit(0)
         else:
-            call(["bash",self.bashloc])
+            call(["bash","%s/%s"%(self.bashdir,self.name)])
 
     def delete(self):
-        os.remove(self.bashloc)
+        os.remove("%s/%s"%(self.bashdir,self.name))
         print("Removed " + self.name + " from bashscripts directory")

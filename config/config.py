@@ -14,7 +14,7 @@ RATSRC = ratpath + "/" + sourcetype
 #Toggles which mask should be used in 2nd pass processing (processing.mac).
 #This doesn't split the data; just indicates which flags an event COULD get
 #Don't change this unless you know what you're doing!
-default_apply = "default_apply"
+apply_mask = "default_apply"
 
 #Analysis mask used to actually split the data with CleanData.mac.
 #If an event in the infed processed root files has any of the flags in
@@ -31,10 +31,8 @@ types = ["timediff","flagged"]
 getclean = True
 getdirty = False
 
-#if fullprocess is True, runs hit cleaning, reconstruction, the whole 9 yards
-#if procntuple is true, also outputs the processed ntuple
-fullprocess = False
-procntuple = False
+#Set the output type you want for the data cleaned files 
+output_type = "ntuple"    #ntuple or ratds
 #  ---------------------- END USER MANIPULATION -------------------- #
 #  ----------------------------------------------------------------- #
 
